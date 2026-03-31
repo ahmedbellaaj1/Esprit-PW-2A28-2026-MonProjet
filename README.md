@@ -1,17 +1,23 @@
 # Nom du projet
 
 ## Overview
-Description du projet
+Greenbite est un site web dédié à l’alimentation durable et à la nutrition intelligente. Il permettra aux utilisateurs de recevoir des recommandations de repas personnalisées selon leur profil, leurs préférences et leurs allergies.
+La plateforme proposera également des recettes durables, la localisation de commerces locaux, ainsi qu’un système de don alimentaire pour réduire le gaspillage. Un module d’administration permettra de gérer les données et d’analyser l’impact du projet.
+
 
 ## Features
-- fonctionnalité 1
-- fonctionnalité 2
+- Préférences alimentaires & gestion des allergies (filtrage intelligent)
+- Recommendation intelligente des repas
+- Géolocalisation & recherche (carte + liste, filtres par distance/catégorie)
 
 ## Tech Stack
 ### Frontend
-...
+- HTML 
+- CSS
+- JS
 ### Backend
-...
+- PHP
+- Base de données: MySQL
 ## Architecture
 
 ## Contributors
