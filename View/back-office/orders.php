@@ -76,6 +76,8 @@ $orders = $controller->list(['q' => $q]);
                                 <th>Quantite</th>
                                 <th>Prix total</th>
                                 <th>Date</th>
+                                <th>Livraison</th>
+                                <th>Date souhaitée</th>
                                 <th>Statut</th>
                                 <th>Adresse</th>
                                 <th>Actions</th>
@@ -90,6 +92,8 @@ $orders = $controller->list(['q' => $q]);
                                 <td><?= (int) $o['quantite'] ?></td>
                                 <td><?= number_format((float) $o['prix_total'], 2, ',', ' ') ?> DT</td>
                                 <td><?= h((string) $o['date_commande']) ?></td>
+                                <td><?= h((string) ($o['mode_livraison'] ?? 'standard')) ?></td>
+                                <td><?= h((string) ($o['date_livraison_souhaitee'] ?? '')) ?></td>
                                 <td>
                                     <span class="badge <?= in_array($o['statut'], ['confirmee', 'livree'], true) ? 'badge-green' : ($o['statut'] === 'annulee' ? 'badge-red' : 'badge-amber') ?>">
                                         <?= h($o['statut']) ?>

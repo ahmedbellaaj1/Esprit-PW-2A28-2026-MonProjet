@@ -26,6 +26,12 @@ CREATE TABLE IF NOT EXISTS commandes (
     prix_total DECIMAL(10,2) NOT NULL DEFAULT 0,
     date_commande DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     statut ENUM('en-cours', 'en-preparation', 'confirmee', 'livree', 'annulee') DEFAULT 'en-cours',
+    mode_livraison ENUM('standard', 'express') NOT NULL DEFAULT 'standard',
+    date_livraison_souhaitee DATE DEFAULT NULL,
     adresse_livraison TEXT NOT NULL,
     CONSTRAINT fk_commande_produit FOREIGN KEY (id_produit) REFERENCES produits(id_produit) ON DELETE CASCADE
 );
+
+ALTER TABLE commandes
+    ADD COLUMN IF NOT EXISTS mode_livraison ENUM('standard', 'express') NOT NULL DEFAULT 'standard' AFTER statut,
+    ADD COLUMN IF NOT EXISTS date_livraison_souhaitee DATE DEFAULT NULL AFTER mode_livraison;

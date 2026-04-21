@@ -122,7 +122,7 @@ $latestOrders = $orderController->latest(5);
                     </div>
                     <div class="table-wrap">
                         <table>
-                            <thead><tr><th>ID</th><th>Produit</th><th>User</th><th>Qte</th><th>Total</th><th>Statut</th></tr></thead>
+                            <thead><tr><th>ID</th><th>Produit</th><th>User</th><th>Qte</th><th>Total</th><th>Livraison</th><th>Date souhaitée</th><th>Statut</th></tr></thead>
                             <tbody>
                             <?php foreach ($latestOrders as $o): ?>
                                 <tr>
@@ -131,6 +131,8 @@ $latestOrders = $orderController->latest(5);
                                     <td><?= (int) $o['id_utilisateur'] ?></td>
                                     <td><?= (int) $o['quantite'] ?></td>
                                     <td><?= number_format((float) $o['prix_total'], 2, ',', ' ') ?> DT</td>
+                                    <td><?= h((string) ($o['mode_livraison'] ?? 'standard')) ?></td>
+                                    <td><?= h((string) ($o['date_livraison_souhaitee'] ?? '')) ?></td>
                                     <td>
                                         <span class="badge <?= in_array($o['statut'], ['confirmee', 'livree'], true) ? 'badge-green' : ($o['statut'] === 'annulee' ? 'badge-red' : 'badge-amber') ?>">
                                             <?= h($o['statut']) ?>

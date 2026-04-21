@@ -13,14 +13,16 @@ $product = $controller->find($id);
 $fieldErrors = [
     'id_utilisateur' => trim((string) ($_GET['err_id_utilisateur'] ?? '')),
     'quantite' => trim((string) ($_GET['err_quantite'] ?? '')),
-    'statut' => trim((string) ($_GET['err_statut'] ?? '')),
     'adresse_livraison' => trim((string) ($_GET['err_adresse_livraison'] ?? '')),
+    'mode_livraison' => trim((string) ($_GET['err_mode_livraison'] ?? '')),
+    'date_livraison_souhaitee' => trim((string) ($_GET['err_date_livraison_souhaitee'] ?? '')),
 ];
 $old = [
     'id_utilisateur' => trim((string) ($_GET['old_id_utilisateur'] ?? '')),
     'quantite' => trim((string) ($_GET['old_quantite'] ?? '1')),
-    'statut' => trim((string) ($_GET['old_statut'] ?? 'en-cours')),
     'adresse_livraison' => trim((string) ($_GET['old_adresse_livraison'] ?? '')),
+    'mode_livraison' => trim((string) ($_GET['old_mode_livraison'] ?? 'standard')),
+    'date_livraison_souhaitee' => trim((string) ($_GET['old_date_livraison_souhaitee'] ?? '')),
 ];
 
 if (!$product) {
@@ -99,30 +101,35 @@ if (!$product) {
                 <div class="form-row">
                     <div>
                         <label for="id_utilisateur">ID utilisateur</label>
-                        <input id="id_utilisateur" type="number" min="1" max="999999999" name="id_utilisateur" value="<?= h($old['id_utilisateur']) ?>" required>
+                        <input id="id_utilisateur" type="text" name="id_utilisateur" value="<?= h($old['id_utilisateur']) ?>">
                         <?php if ($fieldErrors['id_utilisateur'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['id_utilisateur']) ?></small><?php endif; ?>
                     </div>
                     <div>
                         <label for="quantite">Quantite</label>
-                        <input id="quantite" type="number" min="1" max="1000" value="<?= h($old['quantite']) ?>" name="quantite" required>
+                        <input id="quantite" type="text" value="<?= h($old['quantite']) ?>" name="quantite">
                         <?php if ($fieldErrors['quantite'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['quantite']) ?></small><?php endif; ?>
                     </div>
                 </div>
 
                 <div style="margin-top:10px;">
                     <label for="adresse_livraison">Adresse de livraison</label>
-                    <textarea id="adresse_livraison" name="adresse_livraison" rows="4" required minlength="10" maxlength="255"><?= h($old['adresse_livraison']) ?></textarea>
+                    <textarea id="adresse_livraison" name="adresse_livraison" rows="4"><?= h($old['adresse_livraison']) ?></textarea>
                     <?php if ($fieldErrors['adresse_livraison'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['adresse_livraison']) ?></small><?php endif; ?>
                 </div>
 
                 <div style="margin-top:10px;">
-                    <label for="statut">Statut commande</label>
-                    <select id="statut" name="statut">
-                        <option value="en-cours" <?= $old['statut'] === 'en-cours' ? 'selected' : '' ?>>En cours</option>
-                        <option value="confirmee" <?= $old['statut'] === 'confirmee' ? 'selected' : '' ?>>Confirmee</option>
-                        <option value="annulee" <?= $old['statut'] === 'annulee' ? 'selected' : '' ?>>Annulee</option>
+                    <label for="mode_livraison">Mode de livraison 🚚</label>
+                    <select id="mode_livraison" name="mode_livraison">
+                        <option value="standard" <?= $old['mode_livraison'] === 'standard' ? 'selected' : '' ?>>Standard</option>
+                        <option value="express" <?= $old['mode_livraison'] === 'express' ? 'selected' : '' ?>>Express</option>
                     </select>
-                    <?php if ($fieldErrors['statut'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['statut']) ?></small><?php endif; ?>
+                    <?php if ($fieldErrors['mode_livraison'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['mode_livraison']) ?></small><?php endif; ?>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <label for="date_livraison_souhaitee">Date de livraison souhaitée 📅</label>
+                    <input id="date_livraison_souhaitee" type="date" name="date_livraison_souhaitee" value="<?= h($old['date_livraison_souhaitee']) ?>">
+                    <?php if ($fieldErrors['date_livraison_souhaitee'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['date_livraison_souhaitee']) ?></small><?php endif; ?>
                 </div>
 
                 <button class="primary-btn" type="submit" style="margin-top:14px; width:100%;">Valider la commande</button>

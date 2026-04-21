@@ -15,15 +15,15 @@ INSERT INTO produits (
 ('Compote Pomme', 'Andros', '3608580123456', 'Fruits & Legumes', 9.20, 72, 0.3, 16.2, 0.1, 'A', 'https://images.unsplash.com/photo-1579613832125-5d34a13ffe2a?auto=format&fit=crop&w=800&q=60', 'actif', NOW());
 
 INSERT INTO commandes (
-    id_produit, id_utilisateur, quantite, prix_total, date_commande, statut, adresse_livraison
+    id_produit, id_utilisateur, quantite, prix_total, date_commande, statut, mode_livraison, date_livraison_souhaitee, adresse_livraison
 ) VALUES
-((SELECT id_produit FROM produits WHERE code_barre = '3017620422003' ORDER BY id_produit DESC LIMIT 1), 1, 2, 15.00, NOW(), 'confirmee', '12 Rue Hassan II, Casablanca'),
-((SELECT id_produit FROM produits WHERE code_barre = '5411188112345' ORDER BY id_produit DESC LIMIT 1), 2, 3, 56.70, NOW(), 'en-cours', '45 Avenue Mohammed V, Rabat'),
-((SELECT id_produit FROM produits WHERE code_barre = '7613035678901' ORDER BY id_produit DESC LIMIT 1), 3, 1, 24.00, NOW(), 'livree', '8 Rue Ibn Sina, Marrakech'),
-((SELECT id_produit FROM produits WHERE code_barre = '8437001234567' ORDER BY id_produit DESC LIMIT 1), 4, 4, 58.00, NOW(), 'en-preparation', '22 Quartier Agdal, Rabat'),
-((SELECT id_produit FROM produits WHERE code_barre = '8076809512345' ORDER BY id_produit DESC LIMIT 1), 5, 2, 24.00, NOW(), 'confirmee', '77 Bd Zerktouni, Casablanca'),
-((SELECT id_produit FROM produits WHERE code_barre = '7622210123456' ORDER BY id_produit DESC LIMIT 1), 6, 5, 54.50, NOW(), 'annulee', '14 Rue Oued Sebou, Fes'),
-((SELECT id_produit FROM produits WHERE code_barre = '8004030123456' ORDER BY id_produit DESC LIMIT 1), 7, 1, 21.50, NOW(), 'livree', '31 Avenue des FAR, Tanger'),
-((SELECT id_produit FROM produits WHERE code_barre = '6111245678901' ORDER BY id_produit DESC LIMIT 1), 8, 6, 48.00, NOW(), 'en-cours', '3 Hay Salam, Agadir'),
-((SELECT id_produit FROM produits WHERE code_barre = '5053990123456' ORDER BY id_produit DESC LIMIT 1), 9, 2, 34.00, NOW(), 'en-preparation', '90 Rue Al Qods, Oujda'),
-((SELECT id_produit FROM produits WHERE code_barre = '3608580123456' ORDER BY id_produit DESC LIMIT 1), 10, 3, 27.60, NOW(), 'confirmee', '66 Quartier Maarif, Casablanca');
+((SELECT id_produit FROM produits WHERE code_barre = '3017620422003' ORDER BY id_produit DESC LIMIT 1), 1, 2, 15.00, NOW(), 'confirmee', 'standard', DATE_ADD(CURDATE(), INTERVAL 2 DAY), '12 Rue Hassan II, Casablanca'),
+((SELECT id_produit FROM produits WHERE code_barre = '5411188112345' ORDER BY id_produit DESC LIMIT 1), 2, 3, 56.70, NOW(), 'en-cours', 'express', DATE_ADD(CURDATE(), INTERVAL 1 DAY), '45 Avenue Mohammed V, Rabat'),
+((SELECT id_produit FROM produits WHERE code_barre = '7613035678901' ORDER BY id_produit DESC LIMIT 1), 3, 1, 24.00, NOW(), 'livree', 'standard', DATE_ADD(CURDATE(), INTERVAL 3 DAY), '8 Rue Ibn Sina, Marrakech'),
+((SELECT id_produit FROM produits WHERE code_barre = '8437001234567' ORDER BY id_produit DESC LIMIT 1), 4, 4, 58.00, NOW(), 'en-preparation', 'express', DATE_ADD(CURDATE(), INTERVAL 1 DAY), '22 Quartier Agdal, Rabat'),
+((SELECT id_produit FROM produits WHERE code_barre = '8076809512345' ORDER BY id_produit DESC LIMIT 1), 5, 2, 24.00, NOW(), 'confirmee', 'standard', DATE_ADD(CURDATE(), INTERVAL 4 DAY), '77 Bd Zerktouni, Casablanca'),
+((SELECT id_produit FROM produits WHERE code_barre = '7622210123456' ORDER BY id_produit DESC LIMIT 1), 6, 5, 54.50, NOW(), 'annulee', 'standard', DATE_ADD(CURDATE(), INTERVAL 2 DAY), '14 Rue Oued Sebou, Fes'),
+((SELECT id_produit FROM produits WHERE code_barre = '8004030123456' ORDER BY id_produit DESC LIMIT 1), 7, 1, 21.50, NOW(), 'livree', 'express', DATE_ADD(CURDATE(), INTERVAL 1 DAY), '31 Avenue des FAR, Tanger'),
+((SELECT id_produit FROM produits WHERE code_barre = '6111245678901' ORDER BY id_produit DESC LIMIT 1), 8, 6, 48.00, NOW(), 'en-cours', 'standard', DATE_ADD(CURDATE(), INTERVAL 5 DAY), '3 Hay Salam, Agadir'),
+((SELECT id_produit FROM produits WHERE code_barre = '5053990123456' ORDER BY id_produit DESC LIMIT 1), 9, 2, 34.00, NOW(), 'en-preparation', 'express', DATE_ADD(CURDATE(), INTERVAL 1 DAY), '90 Rue Al Qods, Oujda'),
+((SELECT id_produit FROM produits WHERE code_barre = '3608580123456' ORDER BY id_produit DESC LIMIT 1), 10, 3, 27.60, NOW(), 'confirmee', 'standard', DATE_ADD(CURDATE(), INTERVAL 3 DAY), '66 Quartier Maarif, Casablanca');

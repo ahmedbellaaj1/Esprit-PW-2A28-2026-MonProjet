@@ -22,8 +22,9 @@ if (!$result['ok']) {
     }
     $params['old_id_utilisateur'] = (string) ($_POST['id_utilisateur'] ?? '');
     $params['old_quantite'] = (string) ($_POST['quantite'] ?? '1');
-    $params['old_statut'] = (string) ($_POST['statut'] ?? 'en-cours');
     $params['old_adresse_livraison'] = (string) ($_POST['adresse_livraison'] ?? '');
+    $params['old_mode_livraison'] = (string) ($_POST['mode_livraison'] ?? 'standard');
+    $params['old_date_livraison_souhaitee'] = (string) ($_POST['date_livraison_souhaitee'] ?? '');
     redirect('product.php?' . http_build_query($params));
 }
 

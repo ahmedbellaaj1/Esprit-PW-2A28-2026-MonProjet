@@ -71,32 +71,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="row">
                 <div>
                     <label>ID produit</label>
-                    <input type="number" min="1" max="999999999" name="id_produit" value="<?= h((string) $order['id_produit']) ?>" required>
+                    <input type="text" name="id_produit" value="<?= h((string) $order['id_produit']) ?>">
                     <?php if (isset($errors['id_produit'])): ?><small style="color:#b91c1c;"><?= h($errors['id_produit']) ?></small><?php endif; ?>
                 </div>
                 <div>
                     <label>ID utilisateur</label>
-                    <input type="number" min="1" max="999999999" name="id_utilisateur" value="<?= h((string) $order['id_utilisateur']) ?>" required>
+                    <input type="text" name="id_utilisateur" value="<?= h((string) $order['id_utilisateur']) ?>">
                     <?php if (isset($errors['id_utilisateur'])): ?><small style="color:#b91c1c;"><?= h($errors['id_utilisateur']) ?></small><?php endif; ?>
                 </div>
             </div>
             <div class="row">
                 <div>
                     <label>Quantite</label>
-                    <input type="number" min="1" max="1000" name="quantite" value="<?= h((string) $order['quantite']) ?>" required>
+                    <input type="text" name="quantite" value="<?= h((string) $order['quantite']) ?>">
                     <?php if (isset($errors['quantite'])): ?><small style="color:#b91c1c;"><?= h($errors['quantite']) ?></small><?php endif; ?>
                 </div>
                 <div>
                     <label>Prix total</label>
-                    <input type="number" step="0.01" min="0" max="1000000" name="prix_total" value="<?= h((string) $order['prix_total']) ?>" required>
+                    <input type="text" name="prix_total" value="<?= h((string) $order['prix_total']) ?>">
                     <?php if (isset($errors['prix_total'])): ?><small style="color:#b91c1c;"><?= h($errors['prix_total']) ?></small><?php endif; ?>
                 </div>
             </div>
             <div class="row">
                 <div>
                     <label>Date commande (YYYY-MM-DD HH:MM:SS)</label>
-                    <input name="date_commande" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}" title="Format: YYYY-MM-DD HH:MM:SS" value="<?= h((string) $order['date_commande']) ?>">
+                    <input name="date_commande" value="<?= h((string) $order['date_commande']) ?>">
                     <?php if (isset($errors['date_commande'])): ?><small style="color:#b91c1c;"><?= h($errors['date_commande']) ?></small><?php endif; ?>
+                </div>
+                <div>
+                    <label>Mode de livraison 🚚</label>
+                    <select name="mode_livraison">
+                        <?php foreach (['standard', 'express'] as $mode): ?>
+                            <option value="<?= $mode ?>" <?= $order['mode_livraison'] === $mode ? 'selected' : '' ?>><?= ucfirst($mode) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php if (isset($errors['mode_livraison'])): ?><small style="color:#b91c1c;"><?= h($errors['mode_livraison']) ?></small><?php endif; ?>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label>Date livraison souhaitée 📅</label>
+                    <input type="date" name="date_livraison_souhaitee" value="<?= h((string) $order['date_livraison_souhaitee']) ?>">
+                    <?php if (isset($errors['date_livraison_souhaitee'])): ?><small style="color:#b91c1c;"><?= h($errors['date_livraison_souhaitee']) ?></small><?php endif; ?>
                 </div>
                 <div>
                     <label>Statut</label>
@@ -110,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div>
                 <label>Adresse livraison</label>
-                <textarea name="adresse_livraison" rows="4" required minlength="10" maxlength="255"><?= h((string) $order['adresse_livraison']) ?></textarea>
+                <textarea name="adresse_livraison" rows="4"><?= h((string) $order['adresse_livraison']) ?></textarea>
                 <?php if (isset($errors['adresse_livraison'])): ?><small style="color:#b91c1c;"><?= h($errors['adresse_livraison']) ?></small><?php endif; ?>
             </div>
 
