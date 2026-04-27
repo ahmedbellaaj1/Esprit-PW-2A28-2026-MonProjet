@@ -25,6 +25,11 @@ if (!$result['ok']) {
     $params['old_adresse_livraison'] = (string) ($_POST['adresse_livraison'] ?? '');
     $params['old_mode_livraison'] = (string) ($_POST['mode_livraison'] ?? 'standard');
     $params['old_date_livraison_souhaitee'] = (string) ($_POST['date_livraison_souhaitee'] ?? '');
+    $params['old_methode_paiement'] = (string) ($_POST['methode_paiement'] ?? 'cash');
+    $params['old_numero_carte'] = (string) ($_POST['numero_carte'] ?? '');
+    $params['old_nom_titulaire'] = (string) ($_POST['nom_titulaire'] ?? '');
+    $params['old_date_expiration'] = (string) ($_POST['date_expiration'] ?? '');
+    $params['old_cvv'] = (string) ($_POST['cvv'] ?? '');
     redirect('product.php?' . http_build_query($params));
 }
 

@@ -16,6 +16,11 @@ $fieldErrors = [
     'adresse_livraison' => trim((string) ($_GET['err_adresse_livraison'] ?? '')),
     'mode_livraison' => trim((string) ($_GET['err_mode_livraison'] ?? '')),
     'date_livraison_souhaitee' => trim((string) ($_GET['err_date_livraison_souhaitee'] ?? '')),
+    'methode_paiement' => trim((string) ($_GET['err_methode_paiement'] ?? '')),
+    'numero_carte' => trim((string) ($_GET['err_numero_carte'] ?? '')),
+    'nom_titulaire' => trim((string) ($_GET['err_nom_titulaire'] ?? '')),
+    'date_expiration' => trim((string) ($_GET['err_date_expiration'] ?? '')),
+    'cvv' => trim((string) ($_GET['err_cvv'] ?? '')),
 ];
 $old = [
     'id_utilisateur' => trim((string) ($_GET['old_id_utilisateur'] ?? '')),
@@ -23,6 +28,11 @@ $old = [
     'adresse_livraison' => trim((string) ($_GET['old_adresse_livraison'] ?? '')),
     'mode_livraison' => trim((string) ($_GET['old_mode_livraison'] ?? 'standard')),
     'date_livraison_souhaitee' => trim((string) ($_GET['old_date_livraison_souhaitee'] ?? '')),
+    'methode_paiement' => trim((string) ($_GET['old_methode_paiement'] ?? 'cash')),
+    'numero_carte' => trim((string) ($_GET['old_numero_carte'] ?? '')),
+    'nom_titulaire' => trim((string) ($_GET['old_nom_titulaire'] ?? '')),
+    'date_expiration' => trim((string) ($_GET['old_date_expiration'] ?? '')),
+    'cvv' => trim((string) ($_GET['old_cvv'] ?? '')),
 ];
 
 if (!$product) {
@@ -42,7 +52,10 @@ if (!$product) {
 </head>
 <body>
 <nav class="navbar">
-    <a class="navbar-logo" href="index.php">Green<span>Bite</span></a>
+    <a class="navbar-logo" href="index.php">
+        <img src="../assets/659943731_2229435644263567_1175829106494475277_n.ico" alt="GreenBite Logo" class="navbar-logo-img">
+        <span class="navbar-logo-text">Green<span>Bite</span></span>
+    </a>
     <ul class="navbar-links">
         <li><a href="#">Accueil</a></li>
         <li><a href="#" class="active">Produits</a></li>
@@ -51,9 +64,12 @@ if (!$product) {
     </ul>
     <div class="navbar-right">
         <a class="primary-btn nav-quick-btn" href="index.php">Catalogue</a>
+        <a href="cart.php" class="cart-icon" title="Voir le panier">
+            🛒
+            <span id="cartBadge" class="cart-badge" style="display:none;">0</span>
+        </a>
         <div class="nav-avatar">AB</div>
     </div>
-
 </nav>
 
 <div class="main-container" style="padding-top:1.5rem;">
@@ -94,48 +110,24 @@ if (!$product) {
 
         <div class="review-form">
             <h3>Commander ce produit</h3>
-            <form method="post" action="create_order.php">
-                <input type="hidden" name="id_produit" value="<?= (int) $product['id_produit'] ?>">
-                <input type="hidden" name="prix_unitaire" value="<?= h((string) $product['prix']) ?>">
-
-                <div class="form-row">
-                    <div>
-                        <label for="id_utilisateur">ID utilisateur</label>
-                        <input id="id_utilisateur" type="text" name="id_utilisateur" value="<?= h($old['id_utilisateur']) ?>">
-                        <?php if ($fieldErrors['id_utilisateur'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['id_utilisateur']) ?></small><?php endif; ?>
+            <div id="addToCartForm">
+                <div style="display:flex;gap:1rem;align-items:flex-end;">
+                    <div style="flex:1;">
+                        <label for="cart_quantite">Quantité <span id="quantiteDispoDisplay" style="color:#64748b;font-size:0.9rem;"> (Dispo: <?= (int) $product['quantite_disponible'] ?>)</span></label>
+                        <input id="cart_quantite" type="number" value="1" min="1" max="<?= (int) $product['quantite_disponible'] ?>" step="1" style="width:100%;" oninput="validateQuantityInput(this, <?= (int) $product['quantite_disponible'] ?>)">
                     </div>
-                    <div>
-                        <label for="quantite">Quantite</label>
-                        <input id="quantite" type="text" value="<?= h($old['quantite']) ?>" name="quantite">
-                        <?php if ($fieldErrors['quantite'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['quantite']) ?></small><?php endif; ?>
-                    </div>
+                    <button type="button" class="primary-btn" onclick="addProductToCart(<?= (int) $product['id_produit'] ?>, '<?= h((string) $product['nom']) ?>', '<?= h((string) $product['marque']) ?>', <?= (float) $product['prix'] ?>, '<?= h($product['image'] ?: 'https://via.placeholder.com/400x400?text=Produit') ?>', <?= (int) $product['quantite_disponible'] ?>)">🛒 Ajouter au panier</button>
                 </div>
-
-                <div style="margin-top:10px;">
-                    <label for="adresse_livraison">Adresse de livraison</label>
-                    <textarea id="adresse_livraison" name="adresse_livraison" rows="4"><?= h($old['adresse_livraison']) ?></textarea>
-                    <?php if ($fieldErrors['adresse_livraison'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['adresse_livraison']) ?></small><?php endif; ?>
+                <div id="cartMessage" style="margin-top:1rem;padding:0.75rem;border-radius:8px;display:none;">
                 </div>
-
-                <div style="margin-top:10px;">
-                    <label for="mode_livraison">Mode de livraison 🚚</label>
-                    <select id="mode_livraison" name="mode_livraison">
-                        <option value="standard" <?= $old['mode_livraison'] === 'standard' ? 'selected' : '' ?>>Standard</option>
-                        <option value="express" <?= $old['mode_livraison'] === 'express' ? 'selected' : '' ?>>Express</option>
-                    </select>
-                    <?php if ($fieldErrors['mode_livraison'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['mode_livraison']) ?></small><?php endif; ?>
+                <div style="margin-top:1.5rem;padding:1rem;background:#f0fdf4;border-radius:8px;border-left:4px solid #16a34a;">
+                    <p style="margin:0;color:#15803d;font-size:0.95rem;">💡 <strong>Vous pouvez ajouter plusieurs produits au panier</strong> et passer votre commande complète ensuite. Consultez votre panier pour finaliser votre commande.</p>
                 </div>
-
-                <div style="margin-top:10px;">
-                    <label for="date_livraison_souhaitee">Date de livraison souhaitée 📅</label>
-                    <input id="date_livraison_souhaitee" type="date" name="date_livraison_souhaitee" value="<?= h($old['date_livraison_souhaitee']) ?>">
-                    <?php if ($fieldErrors['date_livraison_souhaitee'] !== ''): ?><small style="color:#b91c1c;"><?= h($fieldErrors['date_livraison_souhaitee']) ?></small><?php endif; ?>
-                </div>
-
-                <button class="primary-btn" type="submit" style="margin-top:14px; width:100%;">Valider la commande</button>
-            </form>
+            </div>
         </div>
     </div>
 </div>
+
+<script src="../assets/cart.js"></script>
 </body>
 </html>

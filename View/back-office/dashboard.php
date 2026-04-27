@@ -32,7 +32,10 @@ $latestOrders = $orderController->latest(5);
 <body>
 <div class="dashboard-layout">
     <aside class="sidebar">
-        <div class="sidebar-logo">Green<span>Bite</span></div>
+        <div class="sidebar-logo">
+            <img src="../assets/659943731_2229435644263567_1175829106494475277_n.ico" alt="GreenBite Logo" class="sidebar-logo-img">
+            <span>Green<span>Bite</span></span>
+        </div>
         <div class="sidebar-role">Administration</div>
         <nav class="sidebar-nav">
             <a class="sidebar-link active" href="dashboard.php"><span class="icon">📊</span> Vue d'ensemble</a>
@@ -127,7 +130,12 @@ $latestOrders = $orderController->latest(5);
                             <?php foreach ($latestOrders as $o): ?>
                                 <tr>
                                     <td><?= (int) $o['id_commande'] ?></td>
-                                    <td><?= (int) $o['id_produit'] ?></td>
+                                    <td>
+                                        <div style="font-size:0.9rem;">
+                                            <strong><?= h((string) ($o['produit_nom'] ?? 'Produit supprimé')) ?></strong><br>
+                                            <span style="color:#64748b;font-size:0.85rem;"><?= h((string) ($o['produit_marque'] ?? '')) ?></span>
+                                        </div>
+                                    </td>
                                     <td><?= (int) $o['id_utilisateur'] ?></td>
                                     <td><?= (int) $o['quantite'] ?></td>
                                     <td><?= number_format((float) $o['prix_total'], 2, ',', ' ') ?> DT</td>

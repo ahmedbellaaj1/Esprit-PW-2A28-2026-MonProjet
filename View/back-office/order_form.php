@@ -52,7 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="layout">
     <aside class="sidebar">
-        <div class="brand" style="margin-bottom:14px;">Admin GreenBite</div>
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:14px;">
+            <img src="../assets/659943731_2229435644263567_1175829106494475277_n.ico" alt="GreenBite Logo" style="width:32px;height:32px;">
+            <div class="brand" style="margin:0;">Admin GreenBite</div>
+        </div>
         <a href="dashboard.php">Dashboard</a>
         <a href="products.php">Gestion Produits</a>
         <a class="active" href="orders.php">Gestion Commandes</a>

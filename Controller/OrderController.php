@@ -21,19 +21,70 @@ final class OrderController
     public function list(array $filters = []): array
     {
         $q = trim((string) ($filters['q'] ?? ''));
-        if ($q !== '' && ctype_digit($q)) {
-            $id = (int) $q;
-            $stmt = $this->pdo->prepare('SELECT * FROM commandes WHERE id_commande = :id OR id_produit = :id OR id_utilisateur = :id ORDER BY id_commande DESC');
-            $stmt->execute(['id' => $id]);
-            return $stmt->fetchAll();
+        $idUser = trim((string) ($filters['id_user'] ?? ''));
+        $filterStatus = trim((string) ($filters['status'] ?? ''));
+        $filterDateFrom = trim((string) ($filters['date_from'] ?? ''));
+        $filterDateTo = trim((string) ($filters['date_to'] ?? ''));
+        
+        $where = [];
+        $params = [];
+        
+        // Recherche par texte ou ID commande
+        if ($q !== '') {
+            if (ctype_digit($q)) {
+                // Recherche par ID commande
+                $id = (int) $q;
+                $where[] = 'c.id_commande = ?';
+                $params[] = $id;
+            } else {
+                // Recherche par nom ou marque de produit
+                $search = '%' . $q . '%';
+                $where[] = '(p.nom LIKE ? OR p.marque LIKE ?)';
+                $params[] = $search;
+                $params[] = $search;
+            }
         }
-
-        return $this->pdo->query('SELECT * FROM commandes ORDER BY id_commande DESC')->fetchAll();
+        
+        // Filtre par ID utilisateur
+        if ($idUser !== '' && ctype_digit($idUser)) {
+            $where[] = 'c.id_utilisateur = ?';
+            $params[] = (int) $idUser;
+        }
+        
+        // Filtre par statut
+        if ($filterStatus !== '') {
+            $where[] = 'c.statut = ?';
+            $params[] = $filterStatus;
+        }
+        
+        // Filtre par date (depuis)
+        if ($filterDateFrom !== '') {
+            $where[] = 'DATE(c.date_commande) >= ?';
+            $params[] = $filterDateFrom;
+        }
+        
+        // Filtre par date (jusqu'à)
+        if ($filterDateTo !== '') {
+            $where[] = 'DATE(c.date_commande) <= ?';
+            $params[] = $filterDateTo;
+        }
+        
+        $sql = 'SELECT c.*, p.nom as produit_nom, p.marque as produit_marque FROM commandes c LEFT JOIN produits p ON c.id_produit = p.id_produit';
+        
+        if (!empty($where)) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        
+        $sql .= ' ORDER BY c.date_commande DESC';
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
     }
 
     public function find(int $id): ?array
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM commandes WHERE id_commande = :id LIMIT 1');
+        $stmt = $this->pdo->prepare('SELECT c.*, p.nom as produit_nom, p.marque as produit_marque FROM commandes c LEFT JOIN produits p ON c.id_produit = p.id_produit WHERE c.id_commande = :id LIMIT 1');
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch();
         return $row ?: null;
@@ -51,7 +102,7 @@ final class OrderController
 
     public function latest(int $limit = 5): array
     {
-        $stmt = $this->pdo->prepare('SELECT id_commande, id_produit, id_utilisateur, quantite, prix_total, statut, mode_livraison, date_livraison_souhaitee, date_commande FROM commandes ORDER BY date_commande DESC LIMIT :limit');
+        $stmt = $this->pdo->prepare('SELECT c.id_commande, c.id_produit, c.id_utilisateur, c.quantite, c.prix_total, c.statut, c.mode_livraison, c.date_livraison_souhaitee, c.date_commande, p.nom as produit_nom, p.marque as produit_marque FROM commandes c LEFT JOIN produits p ON c.id_produit = p.id_produit ORDER BY c.date_commande DESC LIMIT :limit');
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
@@ -60,8 +111,8 @@ final class OrderController
     private function create(Order $order): void
     {
         $data = $order->toArray();
-        $sql = 'INSERT INTO commandes (id_produit, id_utilisateur, quantite, prix_total, date_commande, statut, adresse_livraison, mode_livraison, date_livraison_souhaitee)
-                VALUES (:id_produit, :id_utilisateur, :quantite, :prix_total, :date_commande, :statut, :adresse_livraison, :mode_livraison, :date_livraison_souhaitee)';
+        $sql = 'INSERT INTO commandes (id_produit, id_utilisateur, quantite, prix_total, date_commande, statut, adresse_livraison, mode_livraison, date_livraison_souhaitee, methode_paiement, numero_carte, nom_titulaire, date_expiration, cvv)
+                VALUES (:id_produit, :id_utilisateur, :quantite, :prix_total, :date_commande, :statut, :adresse_livraison, :mode_livraison, :date_livraison_souhaitee, :methode_paiement, :numero_carte, :nom_titulaire, :date_expiration, :cvv)';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             ':id_produit' => $data['id_produit'],
@@ -73,14 +124,19 @@ final class OrderController
             ':adresse_livraison' => $data['adresse_livraison'],
             ':mode_livraison' => $data['mode_livraison'],
             ':date_livraison_souhaitee' => $data['date_livraison_souhaitee'],
+            ':methode_paiement' => $data['methode_paiement'],
+            ':numero_carte' => $data['numero_carte'],
+            ':nom_titulaire' => $data['nom_titulaire'],
+            ':date_expiration' => $data['date_expiration'],
+            ':cvv' => $data['cvv'],
         ]);
     }
 
     private function createNow(Order $order): void
     {
         $data = $order->toArray();
-        $sql = 'INSERT INTO commandes (id_produit, id_utilisateur, quantite, prix_total, date_commande, statut, adresse_livraison, mode_livraison, date_livraison_souhaitee)
-                VALUES (:id_produit, :id_utilisateur, :quantite, :prix_total, NOW(), :statut, :adresse_livraison, :mode_livraison, :date_livraison_souhaitee)';
+        $sql = 'INSERT INTO commandes (id_produit, id_utilisateur, quantite, prix_total, date_commande, statut, adresse_livraison, mode_livraison, date_livraison_souhaitee, methode_paiement, numero_carte, nom_titulaire, date_expiration, cvv)
+                VALUES (:id_produit, :id_utilisateur, :quantite, :prix_total, NOW(), :statut, :adresse_livraison, :mode_livraison, :date_livraison_souhaitee, :methode_paiement, :numero_carte, :nom_titulaire, :date_expiration, :cvv)';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             ':id_produit' => $data['id_produit'],
@@ -91,6 +147,11 @@ final class OrderController
             ':adresse_livraison' => $data['adresse_livraison'],
             ':mode_livraison' => $data['mode_livraison'],
             ':date_livraison_souhaitee' => $data['date_livraison_souhaitee'],
+            ':methode_paiement' => $data['methode_paiement'],
+            ':numero_carte' => $data['numero_carte'],
+            ':nom_titulaire' => $data['nom_titulaire'],
+            ':date_expiration' => $data['date_expiration'],
+            ':cvv' => $data['cvv'],
         ]);
     }
 
@@ -100,7 +161,9 @@ final class OrderController
         $sql = 'UPDATE commandes SET id_produit = :id_produit, id_utilisateur = :id_utilisateur, quantite = :quantite,
                 prix_total = :prix_total, date_commande = :date_commande, statut = :statut,
                 adresse_livraison = :adresse_livraison, mode_livraison = :mode_livraison,
-                date_livraison_souhaitee = :date_livraison_souhaitee WHERE id_commande = :id';
+                date_livraison_souhaitee = :date_livraison_souhaitee, methode_paiement = :methode_paiement,
+                numero_carte = :numero_carte, nom_titulaire = :nom_titulaire, date_expiration = :date_expiration,
+                cvv = :cvv WHERE id_commande = :id';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             ':id_produit' => $data['id_produit'],
@@ -112,6 +175,11 @@ final class OrderController
             ':adresse_livraison' => $data['adresse_livraison'],
             ':mode_livraison' => $data['mode_livraison'],
             ':date_livraison_souhaitee' => $data['date_livraison_souhaitee'],
+            ':methode_paiement' => $data['methode_paiement'],
+            ':numero_carte' => $data['numero_carte'],
+            ':nom_titulaire' => $data['nom_titulaire'],
+            ':date_expiration' => $data['date_expiration'],
+            ':cvv' => $data['cvv'],
             ':id' => $id,
         ]);
     }
@@ -138,6 +206,17 @@ final class OrderController
         $order->setAdresseLivraison(trim((string) ($input['adresse_livraison'] ?? '')));
         $order->setModeLivraison(trim((string) ($input['mode_livraison'] ?? 'standard')));
         $order->setDateLivraisonSouhaitee($this->normalizeDeliveryDate($input['date_livraison_souhaitee'] ?? null));
+        
+        // Set payment method and details
+        $methodePaiement = trim((string) ($input['methode_paiement'] ?? 'cash'));
+        $order->setMethodePaiement($methodePaiement);
+        
+        if ($methodePaiement === 'carte') {
+            $order->setNumeroCarte(trim((string) ($input['numero_carte'] ?? '')));
+            $order->setNomTitulaire(trim((string) ($input['nom_titulaire'] ?? '')));
+            $order->setDateExpiration(trim((string) ($input['date_expiration'] ?? '')));
+            $order->setCvv(trim((string) ($input['cvv'] ?? '')));
+        }
 
         // Validate
         $errors = $this->validateForBackOffice($order);
@@ -154,7 +233,7 @@ final class OrderController
         if ($id && $id > 0) {
             $this->update($id, $order);
         } else {
-            $this->create($order);
+            $this->createNow($order);
         }
 
         return ['ok' => true, 'data' => $order->toArray()];
@@ -169,6 +248,7 @@ final class OrderController
         $adresse = trim((string) ($input['adresse_livraison'] ?? ''));
         $modeLivraison = trim((string) ($input['mode_livraison'] ?? 'standard'));
         $dateLivraisonSouhaitee = $this->normalizeDeliveryDate($input['date_livraison_souhaitee'] ?? null);
+        $methodePaiement = trim((string) ($input['methode_paiement'] ?? 'cash'));
 
         $errors = [];
 
@@ -201,6 +281,30 @@ final class OrderController
             $errors['date_livraison_souhaitee'] = 'La date de livraison souhaitée ne peut pas etre passee.';
         }
 
+        // Validation du paiement
+        if (!in_array($methodePaiement, ['cash', 'carte'], true)) {
+            $errors['methode_paiement'] = 'Methode de paiement invalide.';
+        } elseif ($methodePaiement === 'carte') {
+            // Valider les informations de carte
+            $numeroCarte = trim((string) ($input['numero_carte'] ?? ''));
+            $nomTitulaire = trim((string) ($input['nom_titulaire'] ?? ''));
+            $dateExpiration = trim((string) ($input['date_expiration'] ?? ''));
+            $cvv = trim((string) ($input['cvv'] ?? ''));
+
+            if (!preg_match('/^\d{13,19}$/', $numeroCarte)) {
+                $errors['numero_carte'] = 'Numero de carte invalide (13-19 chiffres).';
+            }
+            if (mb_strlen($nomTitulaire) < 3 || mb_strlen($nomTitulaire) > 100) {
+                $errors['nom_titulaire'] = 'Nom du titulaire invalide (3-100 caracteres).';
+            }
+            if (!preg_match('/^\d{2}\/\d{2}$/', $dateExpiration)) {
+                $errors['date_expiration'] = 'Format: MM/YY';
+            }
+            if (!preg_match('/^\d{3,4}$/', $cvv)) {
+                $errors['cvv'] = 'CVV invalide (3-4 chiffres).';
+            }
+        }
+
         if ($errors) {
             return ['ok' => false, 'errors' => $errors, 'error' => 'Veuillez corriger les champs invalides.'];
         }
@@ -214,6 +318,14 @@ final class OrderController
         $order->setAdresseLivraison($adresse);
         $order->setModeLivraison($modeLivraison);
         $order->setDateLivraisonSouhaitee($dateLivraisonSouhaitee);
+        $order->setMethodePaiement($methodePaiement);
+        
+        if ($methodePaiement === 'carte') {
+            $order->setNumeroCarte(trim((string) ($input['numero_carte'] ?? '')));
+            $order->setNomTitulaire(trim((string) ($input['nom_titulaire'] ?? '')));
+            $order->setDateExpiration(trim((string) ($input['date_expiration'] ?? '')));
+            $order->setCvv(trim((string) ($input['cvv'] ?? '')));
+        }
         
         $this->createNow($order);
 

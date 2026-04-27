@@ -16,6 +16,7 @@ final class Product
     private float $lipides = 0.0;
     private string $nutriscore = 'C';
     private string $image = '';
+    private int $quantiteDisponible = 0;
     private string $statut = 'actif';
     private ?string $dateAjout = null;
 
@@ -78,6 +79,11 @@ final class Product
     public function getImage(): string
     {
         return $this->image;
+    }
+
+    public function getQuantiteDisponible(): int
+    {
+        return $this->quantiteDisponible;
     }
 
     public function getStatut(): string
@@ -163,6 +169,12 @@ final class Product
         return $this;
     }
 
+    public function setQuantiteDisponible(int $quantiteDisponible): self
+    {
+        $this->quantiteDisponible = $quantiteDisponible;
+        return $this;
+    }
+
     public function setStatut(string $statut): self
     {
         $this->statut = $statut;
@@ -211,6 +223,7 @@ final class Product
             'lipides' => $this->lipides,
             'nutriscore' => $this->nutriscore,
             'image' => $this->image,
+            'quantite_disponible' => $this->quantiteDisponible,
             'statut' => $this->statut,
             'date_ajout' => $this->dateAjout,
         ];
@@ -231,6 +244,7 @@ final class Product
         $product->setLipides((float) ($data['lipides'] ?? 0));
         $product->setNutriscore($data['nutriscore'] ?? 'C');
         $product->setImage($data['image'] ?? '');
+        $product->setQuantiteDisponible((int) ($data['quantite_disponible'] ?? 0));
         $product->setStatut($data['statut'] ?? 'actif');
         $product->setDateAjout($data['date_ajout'] ?? null);
         return $product;

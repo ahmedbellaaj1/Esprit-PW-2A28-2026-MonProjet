@@ -14,6 +14,11 @@ final class Order
     private string $adresseLivraison = '';
     private string $modeLivraison = 'standard';
     private ?string $dateLivraisonSouhaitee = null;
+    private string $methodePaiement = 'cash';
+    private ?string $numeroCarte = null;
+    private ?string $nomTitulaire = null;
+    private ?string $dateExpiration = null;
+    private ?string $cvv = null;
 
     // Getters
     public function getIdCommande(): ?int
@@ -64,6 +69,31 @@ final class Order
     public function getDateLivraisonSouhaitee(): ?string
     {
         return $this->dateLivraisonSouhaitee;
+    }
+
+    public function getMethodePaiement(): string
+    {
+        return $this->methodePaiement;
+    }
+
+    public function getNumeroCarte(): ?string
+    {
+        return $this->numeroCarte;
+    }
+
+    public function getNomTitulaire(): ?string
+    {
+        return $this->nomTitulaire;
+    }
+
+    public function getDateExpiration(): ?string
+    {
+        return $this->dateExpiration;
+    }
+
+    public function getCvv(): ?string
+    {
+        return $this->cvv;
     }
 
     // Setters
@@ -127,6 +157,36 @@ final class Order
         return $this;
     }
 
+    public function setMethodePaiement(string $methode): self
+    {
+        $this->methodePaiement = $methode;
+        return $this;
+    }
+
+    public function setNumeroCarte(?string $numero): self
+    {
+        $this->numeroCarte = $numero;
+        return $this;
+    }
+
+    public function setNomTitulaire(?string $nom): self
+    {
+        $this->nomTitulaire = $nom;
+        return $this;
+    }
+
+    public function setDateExpiration(?string $date): self
+    {
+        $this->dateExpiration = $date;
+        return $this;
+    }
+
+    public function setCvv(?string $cvv): self
+    {
+        $this->cvv = $cvv;
+        return $this;
+    }
+
     // Logique métier
     public function isConfirmed(): bool
     {
@@ -166,6 +226,11 @@ final class Order
             'adresse_livraison' => $this->adresseLivraison,
             'mode_livraison' => $this->modeLivraison,
             'date_livraison_souhaitee' => $this->dateLivraisonSouhaitee,
+            'methode_paiement' => $this->methodePaiement,
+            'numero_carte' => $this->numeroCarte,
+            'nom_titulaire' => $this->nomTitulaire,
+            'date_expiration' => $this->dateExpiration,
+            'cvv' => $this->cvv,
         ];
     }
 
@@ -182,6 +247,11 @@ final class Order
         $order->setAdresseLivraison($data['adresse_livraison'] ?? '');
         $order->setModeLivraison($data['mode_livraison'] ?? 'standard');
         $order->setDateLivraisonSouhaitee($data['date_livraison_souhaitee'] ?? null);
+        $order->setMethodePaiement($data['methode_paiement'] ?? 'cash');
+        $order->setNumeroCarte($data['numero_carte'] ?? null);
+        $order->setNomTitulaire($data['nom_titulaire'] ?? null);
+        $order->setDateExpiration($data['date_expiration'] ?? null);
+        $order->setCvv($data['cvv'] ?? null);
         return $order;
     }
 }
