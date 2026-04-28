@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../Controller/bootstrap.php';
-require_once __DIR__ . '/../../Model/User.php';
+require_once __DIR__ . '/../../Controller/UserRepository.php';
 
 requireAuth();
 
-$userModel = new User();
-$currentUser = $userModel->findById((int) $_SESSION['user']['id']);
+$userRepository = new UserRepository();
+$currentUser = $userRepository->findById((int) $_SESSION['user']['id']);
 
 if ($currentUser === null) {
     unset($_SESSION['user']);
@@ -17,11 +17,12 @@ if ($currentUser === null) {
 }
 
 $flash = getFlash();
-$initials = strtoupper(substr((string) $currentUser['prenom'], 0, 1) . substr((string) $currentUser['nom'], 0, 1));
+$initials = strtoupper(substr($currentUser->getPrenom(), 0, 1) . substr($currentUser->getNom(), 0, 1));
+$isAdmin = $currentUser->getRole() === 'admin';
 $photoUrl = null;
 
-if (!empty($currentUser['photo'])) {
-    $photoFile = (string) $currentUser['photo'];
+if (!empty($currentUser->getPhoto())) {
+    $photoFile = (string) $currentUser->getPhoto();
     $photoPath = __DIR__ . '/../../uploads/users/' . $photoFile;
 
     if (is_file($photoPath)) {
@@ -34,12 +35,15 @@ if (!empty($currentUser['photo'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Profil - GreenBit</title>
+    <title>Mon Profil - GreenBite</title>
     <link rel="stylesheet" href="../style.css">
 </head>
 <body>
     <nav class="navbar">
-        <a class="navbar-logo" href="/projetwebnova/View/front-office/profile.php">Green<span>Bite</span></a>
+        <a class="navbar-logo" href="/projetwebnova/View/front-office/profile.php">
+            <img src="../../uploads/logo.png" alt="GreenBite Logo" class="navbar-logo-img">
+            <span class="navbar-logo-text">Green<span>Bite</span></span>
+        </a>
         <ul class="navbar-links">
             <li><a href="#">Accueil</a></li>
             <li><a href="#">Recettes</a></li>
@@ -64,40 +68,42 @@ if (!empty($currentUser['photo'])) {
                     <h1>Mon Profil</h1>
                     <p>Consultez et modifiez les informations de votre compte.</p>
                 </div>
-                <span class="profile-status">Compte <?= htmlspecialchars($currentUser['statut']) ?></span>
+                <span class="profile-status">Compte <?= htmlspecialchars($currentUser->getStatut()) ?></span>
             </header>
 
             <?php if ($flash): ?>
                 <div class="alert <?= htmlspecialchars($flash['type']) ?>"><?= htmlspecialchars($flash['message']) ?></div>
             <?php endif; ?>
 
-            <form action="../../Controller/user.php" method="post" enctype="multipart/form-data" autocomplete="on" class="profile-form">
+            <form action="../../Controller/user.php" method="post" enctype="multipart/form-data" autocomplete="on" class="profile-form" novalidate>
                 <input type="hidden" name="action" value="update_profile">
 
                 <div class="form-grid">
-                    <div class="form-group">
-                        <label for="profile-id">ID</label>
-                        <input id="profile-id" name="id" type="number" value="<?= (int) $currentUser['id'] ?>" readonly>
-                    </div>
+                    <?php if ($isAdmin): ?>
+                        <div class="form-group">
+                            <label for="profile-id">ID</label>
+                            <input id="profile-id" name="id" type="number" value="<?= (int) $currentUser->getId() ?>" readonly>
+                        </div>
+                    <?php endif; ?>
 
                     <div class="form-group">
                         <label for="profile-role">Role</label>
-                        <input id="profile-role" name="role" type="text" value="<?= htmlspecialchars($currentUser['role']) ?>" readonly>
+                        <input id="profile-role" name="role" type="text" value="<?= htmlspecialchars($currentUser->getRole()) ?>" readonly>
                     </div>
 
                     <div class="form-group">
                         <label for="profile-nom">Nom</label>
-                        <input id="profile-nom" name="nom" type="text" value="<?= htmlspecialchars($currentUser['nom']) ?>" required>
+                        <input id="profile-nom" name="nom" type="text" value="<?= htmlspecialchars($currentUser->getNom()) ?>" required>
                     </div>
 
                     <div class="form-group">
                         <label for="profile-prenom">Prenom</label>
-                        <input id="profile-prenom" name="prenom" type="text" value="<?= htmlspecialchars($currentUser['prenom']) ?>" required>
+                        <input id="profile-prenom" name="prenom" type="text" value="<?= htmlspecialchars($currentUser->getPrenom()) ?>" required>
                     </div>
 
                     <div class="form-group full">
                         <label for="profile-email">Email</label>
-                        <input id="profile-email" name="email" type="email" value="<?= htmlspecialchars($currentUser['email']) ?>" required>
+                        <input id="profile-email" name="email" type="email" value="<?= htmlspecialchars($currentUser->getEmail()) ?>" required>
                     </div>
 
                     <div class="form-group">
@@ -113,7 +119,7 @@ if (!empty($currentUser['photo'])) {
                             <button type="button" class="profile-photo-remove" id="removePhotoPreview" aria-label="Retirer la photo">x</button>
                             <img
                                 src="<?= htmlspecialchars($photoUrl ?? '') ?>"
-                                alt="Photo de profil de <?= htmlspecialchars($currentUser['prenom'] . ' ' . $currentUser['nom']) ?>"
+                                    alt="Photo de profil de <?= htmlspecialchars($currentUser->getPrenom() . ' ' . $currentUser->getNom()) ?>"
                                 class="profile-photo-image"
                                 id="profilePhotoImage"
                             >

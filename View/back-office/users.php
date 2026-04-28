@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../Controller/bootstrap.php';
-require_once __DIR__ . '/../../Model/User.php';
+require_once __DIR__ . '/../../Controller/UserRepository.php';
 
 requireAdmin();
 
-$userModel = new User();
-$users = $userModel->getAll();
+$userRepository = new UserRepository();
+$users = $userRepository->getAll();
 $flash = getFlash();
 $sessionUser = $_SESSION['user'];
 $initials = strtoupper(substr((string) $sessionUser['prenom'], 0, 1) . substr((string) $sessionUser['nom'], 0, 1));
@@ -24,7 +24,10 @@ $initials = strtoupper(substr((string) $sessionUser['prenom'], 0, 1) . substr((s
 <body>
     <div class="dashboard-layout">
         <aside class="sidebar">
-            <div class="sidebar-logo">Green<span>Bite</span></div>
+            <div class="sidebar-logo">
+                <img src="../../uploads/logo.png" alt="GreenBite Logo" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">Green<span>Bite</span></span>
+            </div>
             <div class="sidebar-role">Administration</div>
             <nav class="sidebar-nav">
                 <a class="sidebar-link" href="#"><span class="icon">📊</span> Vue d ensemble</a>
@@ -57,8 +60,8 @@ $initials = strtoupper(substr((string) $sessionUser['prenom'], 0, 1) . substr((s
             <div class="page-content users-page-content">
                 <section class="users-card card" aria-label="Tableau des utilisateurs">
                     <div class="page-header users-page-header">
-                        <h1>CRUD utilisateurs</h1>
-                        <p>Creation, lecture, mise a jour et suppression des utilisateurs.</p>
+                        <h1> Utilisateurs</h1>
+                        
                     </div>
 
                     <?php if ($flash): ?>
@@ -91,20 +94,20 @@ $initials = strtoupper(substr((string) $sessionUser['prenom'], 0, 1) . substr((s
                                 <tbody id="usersTableBody">
                                     <?php foreach ($users as $user): ?>
                                         <tr
-                                            data-id="<?= (int) $user['id'] ?>"
-                                            data-nom="<?= htmlspecialchars($user['nom']) ?>"
-                                            data-prenom="<?= htmlspecialchars($user['prenom']) ?>"
-                                            data-email="<?= htmlspecialchars($user['email']) ?>"
-                                            data-role="<?= htmlspecialchars($user['role']) ?>"
-                                            data-statut="<?= htmlspecialchars($user['statut']) ?>"
+                                            data-id="<?= (int) $user->getId() ?>"
+                                            data-nom="<?= htmlspecialchars($user->getNom()) ?>"
+                                            data-prenom="<?= htmlspecialchars($user->getPrenom()) ?>"
+                                            data-email="<?= htmlspecialchars($user->getEmail()) ?>"
+                                            data-role="<?= htmlspecialchars($user->getRole()) ?>"
+                                            data-statut="<?= htmlspecialchars($user->getStatut()) ?>"
                                         >
-                                            <td><?= (int) $user['id'] ?></td>
-                                            <td><?= htmlspecialchars($user['nom']) ?></td>
-                                            <td><?= htmlspecialchars($user['prenom']) ?></td>
-                                            <td><?= htmlspecialchars($user['email']) ?></td>
-                                            <td><?= htmlspecialchars($user['role']) ?></td>
-                                            <td><?= htmlspecialchars($user['statut']) ?></td>
-                                            <td><?= htmlspecialchars((string) $user['date_inscription']) ?></td>
+                                            <td><?= (int) $user->getId() ?></td>
+                                            <td><?= htmlspecialchars($user->getNom()) ?></td>
+                                            <td><?= htmlspecialchars($user->getPrenom()) ?></td>
+                                            <td><?= htmlspecialchars($user->getEmail()) ?></td>
+                                            <td><?= htmlspecialchars($user->getRole()) ?></td>
+                                            <td><?= htmlspecialchars($user->getStatut()) ?></td>
+                                            <td><?= htmlspecialchars((string) ($user->getDateInscription() ?? '-')) ?></td>
                                             <td class="actions-cell">
                                                 <button type="button" class="table-btn save-btn open-update-btn">Update</button>
                                                 <button type="button" class="table-btn delete-btn open-delete-btn">Delete</button>
@@ -124,7 +127,7 @@ $initials = strtoupper(substr((string) $sessionUser['prenom'], 0, 1) . substr((s
         <div class="form-modal">
             <button class="modal-close" type="button" data-close-modal="addUserModal">x</button>
             <h2>Ajouter un utilisateur</h2>
-            <form action="../../Controller/user.php" method="post">
+            <form action="../../Controller/user.php" method="post" novalidate>
                 <input type="hidden" name="action" value="create_user">
                 <div class="form-row">
                     <div class="form-group">
@@ -176,7 +179,7 @@ $initials = strtoupper(substr((string) $sessionUser['prenom'], 0, 1) . substr((s
         <div class="form-modal">
             <button class="modal-close" type="button" data-close-modal="updateUserModal">x</button>
             <h2>Modifier utilisateur</h2>
-            <form action="../../Controller/user.php" method="post" id="updateUserForm">
+            <form action="../../Controller/user.php" method="post" id="updateUserForm" novalidate>
                 <input type="hidden" name="action" value="update_user">
                 <input type="hidden" name="id" id="updateId">
                 <div class="form-row">

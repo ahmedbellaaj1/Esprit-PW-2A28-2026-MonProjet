@@ -2,107 +2,151 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../config/database.php';
-
 final class User
 {
-    private PDO $pdo;
+    private ?int $id;
+    private string $nom;
+    private string $prenom;
+    private string $email;
+    private string $motDePasse;
+    private ?string $photo;
+    private string $role;
+    private string $statut;
+    private ?string $dateInscription;
 
-    public function __construct()
-    {
-        $this->pdo = getPdo();
+    public function __construct(
+        ?int $id = null,
+        string $nom = '',
+        string $prenom = '',
+        string $email = '',
+        string $motDePasse = '',
+        ?string $photo = null,
+        string $role = 'user',
+        string $statut = 'actif',
+        ?string $dateInscription = null
+    ) {
+        $this->id = $id;
+        $this->nom = $nom;
+        $this->prenom = $prenom;
+        $this->email = $email;
+        $this->motDePasse = $motDePasse;
+        $this->photo = $photo;
+        $this->role = $role;
+        $this->statut = $statut;
+        $this->dateInscription = $dateInscription;
     }
 
-    public function findByEmail(string $email): ?array
+    public static function fromArray(array $row): self
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM users WHERE email = :email LIMIT 1');
-        $stmt->execute(['email' => $email]);
-        $user = $stmt->fetch();
-
-        return $user ?: null;
+        return new self(
+            isset($row['id']) ? (int) $row['id'] : null,
+            (string) ($row['nom'] ?? ''),
+            (string) ($row['prenom'] ?? ''),
+            (string) ($row['email'] ?? ''),
+            (string) ($row['mot_de_passe'] ?? ''),
+            isset($row['photo']) ? (string) $row['photo'] : null,
+            (string) ($row['role'] ?? 'user'),
+            (string) ($row['statut'] ?? 'actif'),
+            isset($row['date_inscription']) ? (string) $row['date_inscription'] : null
+        );
     }
 
-    public function findById(int $id): ?array
+    public function getId(): ?int
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
-        $stmt->execute(['id' => $id]);
-        $user = $stmt->fetch();
-
-        return $user ?: null;
+        return $this->id;
     }
 
-    public function getAll(): array
+    public function setId(?int $id): self
     {
-        $stmt = $this->pdo->query('SELECT id, nom, prenom, email, role, statut, date_inscription FROM users ORDER BY id DESC');
-        return $stmt->fetchAll();
+        $this->id = $id;
+        return $this;
     }
 
-    public function create(array $data): int
+    public function getNom(): string
     {
-        $sql = 'INSERT INTO users (nom, prenom, email, mot_de_passe, photo, role, statut)
-                VALUES (:nom, :prenom, :email, :mot_de_passe, :photo, :role, :statut)';
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([
-            'nom' => $data['nom'],
-            'prenom' => $data['prenom'],
-            'email' => $data['email'],
-            'mot_de_passe' => $data['mot_de_passe'],
-            'photo' => $data['photo'] ?? null,
-            'role' => $data['role'] ?? 'user',
-            'statut' => $data['statut'] ?? 'actif',
-        ]);
-
-        return (int) $this->pdo->lastInsertId();
+        return $this->nom;
     }
 
-    public function updateProfile(int $id, array $data): bool
+    public function setNom(string $nom): self
     {
-        $sql = 'UPDATE users
-                SET nom = :nom,
-                    prenom = :prenom,
-                    email = :email,
-                    photo = :photo,
-                    mot_de_passe = :mot_de_passe
-                WHERE id = :id';
-
-        $stmt = $this->pdo->prepare($sql);
-
-        return $stmt->execute([
-            'id' => $id,
-            'nom' => $data['nom'],
-            'prenom' => $data['prenom'],
-            'email' => $data['email'],
-            'photo' => $data['photo'],
-            'mot_de_passe' => $data['mot_de_passe'],
-        ]);
+        $this->nom = $nom;
+        return $this;
     }
 
-    public function updateByAdmin(int $id, array $data): bool
+    public function getPrenom(): string
     {
-        $sql = 'UPDATE users
-                SET nom = :nom,
-                    prenom = :prenom,
-                    email = :email,
-                    role = :role,
-                    statut = :statut
-                WHERE id = :id';
-
-        $stmt = $this->pdo->prepare($sql);
-
-        return $stmt->execute([
-            'id' => $id,
-            'nom' => $data['nom'],
-            'prenom' => $data['prenom'],
-            'email' => $data['email'],
-            'role' => $data['role'],
-            'statut' => $data['statut'],
-        ]);
+        return $this->prenom;
     }
 
-    public function delete(int $id): bool
+    public function setPrenom(string $prenom): self
     {
-        $stmt = $this->pdo->prepare('DELETE FROM users WHERE id = :id');
-        return $stmt->execute(['id' => $id]);
+        $this->prenom = $prenom;
+        return $this;
+    }
+
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
+        return $this;
+    }
+
+    public function getMotDePasse(): string
+    {
+        return $this->motDePasse;
+    }
+
+    public function setMotDePasse(string $motDePasse): self
+    {
+        $this->motDePasse = $motDePasse;
+        return $this;
+    }
+
+    public function getPhoto(): ?string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(?string $photo): self
+    {
+        $this->photo = $photo;
+        return $this;
+    }
+
+    public function getRole(): string
+    {
+        return $this->role;
+    }
+
+    public function setRole(string $role): self
+    {
+        $this->role = $role;
+        return $this;
+    }
+
+    public function getStatut(): string
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(string $statut): self
+    {
+        $this->statut = $statut;
+        return $this;
+    }
+
+    public function getDateInscription(): ?string
+    {
+        return $this->dateInscription;
+    }
+
+    public function setDateInscription(?string $dateInscription): self
+    {
+        $this->dateInscription = $dateInscription;
+        return $this;
     }
 }
