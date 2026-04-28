@@ -5,32 +5,27 @@ include '../config/db.php';
 header('Content-Type: application/json');
 
 try {
-    // Nombre total d'utilisateurs
-    $stmtUsers = $pdo->query("SELECT COUNT(*) FROM users");
-    $totalUsers = $stmtUsers->fetchColumn();
+    // 1. Nombre total de préférences alimentaires
+    $stmtPref = $pdo->query("SELECT COUNT(*) FROM preferences_alimentaires WHERE type_preference IS NOT NULL AND type_preference != ''");
+    $totalPrefs = $stmtPref->fetchColumn();
+    
+    // 2. Moyenne des calories visées (depuis preferences_alimentaires)
+    $stmtCal = $pdo->query("SELECT AVG(calories) FROM preferences_alimentaires WHERE calories > 0");
+    $avgCalories = round($stmtCal->fetchColumn() ?? 0, 0);
 
-    // Nom de la table produits (gestion casse)
-    $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?");
-    $stmtCheck->execute(['produits']);
-    $productsTable = ((int)$stmtCheck->fetchColumn() > 0) ? 'produits' : 'Produits';
+    // 3. Moyenne d'âge
+    $stmtAge = $pdo->query("SELECT AVG(age) FROM preferences_alimentaires WHERE age > 0");
+    $avgAge = round($stmtAge->fetchColumn() ?? 0, 1);
 
-    // Nombre total de produits
-    $stmtProducts = $pdo->query("SELECT COUNT(*) FROM $productsTable");
-    $totalProducts = $stmtProducts->fetchColumn();
-
-    // Nombre de catégories uniques
-    $stmtCategories = $pdo->query("SELECT COUNT(DISTINCT categorie) FROM $productsTable");
-    $totalCategories = $stmtCategories->fetchColumn();
-
-    // Moyenne calorique
-    $stmtCalories = $pdo->query("SELECT AVG(calories) FROM $productsTable");
-    $avgCalories = round($stmtCalories->fetchColumn(), 0);
+    // 4. Poids moyen (utilisé comme indicateur de poids idéal/moyen)
+    $stmtPoids = $pdo->query("SELECT AVG(poids) FROM preferences_alimentaires WHERE poids > 0");
+    $avgPoids = round($stmtPoids->fetchColumn() ?? 0, 1);
 
     echo json_encode([
-        'total_users' => $totalUsers,
-        'total_products' => $totalProducts,
-        'total_categories' => $totalCategories,
-        'avg_calories' => $avgCalories
+        'total_preferences' => $totalPrefs,
+        'avg_calories' => $avgCalories,
+        'avg_age' => $avgAge,
+        'avg_poids' => $avgPoids
     ]);
 
 } catch (Exception $e) {

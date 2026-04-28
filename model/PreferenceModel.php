@@ -1,5 +1,5 @@
 <?php
-class UserModel {
+class PreferenceModel {
 
     // 🔹 Récupérer les préférences et allergies
     public static function getProfile($pdo, $id_user) {

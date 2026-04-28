@@ -2,17 +2,11 @@
 session_start();
 include '../config/db.php';
 
-// Récupérer utilisateurs
-$stmt = $pdo->query("SELECT id, nom, email, age, poids, calories FROM users ORDER BY id DESC");
-$users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+require_once '../controller/AdminController.php';
 
-// Récupérer produits
-$stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?");
-$stmtCheck->execute(['produits']);
-$productsTable = ((int)$stmtCheck->fetchColumn() > 0) ? 'produits' : 'Produits';
-
-$stmtP = $pdo->query("SELECT id, nom, categorie, prix, calories FROM $productsTable ORDER BY id DESC");
-$allProducts = $stmtP->fetchAll(PDO::FETCH_ASSOC);
+$data = AdminController::getDashboardData($pdo);
+$users = $data['users'];
+$allProducts = $data['products'];
 ?>
 
 <!DOCTYPE html>
@@ -184,31 +178,31 @@ $allProducts = $stmtP->fetchAll(PDO::FETCH_ASSOC);
 <!-- 📊 STATISTIQUES -->
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="stat-icon bg-users"><i class="fas fa-users"></i></div>
+        <div class="stat-icon bg-users"><i class="fas fa-heart"></i></div>
         <div class="stat-info">
-            <span class="stat-value" id="stat-users">-</span>
-            <span class="stat-label">Utilisateurs</span>
+            <span class="stat-value" id="stat-prefs">-</span>
+            <span class="stat-label">Préférences</span>
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon bg-products"><i class="fas fa-utensils"></i></div>
-        <div class="stat-info">
-            <span class="stat-value" id="stat-products">-</span>
-            <span class="stat-label">Produits</span>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon bg-cats"><i class="fas fa-list"></i></div>
-        <div class="stat-info">
-            <span class="stat-value" id="stat-categories">-</span>
-            <span class="stat-label">Catégories</span>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon bg-calories"><i class="fas fa-fire"></i></div>
+        <div class="stat-icon bg-products"><i class="fas fa-fire"></i></div>
         <div class="stat-info">
             <span class="stat-value" id="stat-calories">-</span>
             <span class="stat-label">Calories Moy.</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon bg-cats"><i class="fas fa-calendar-alt"></i></div>
+        <div class="stat-info">
+            <span class="stat-value" id="stat-age">-</span>
+            <span class="stat-label">Âge Moyen</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon bg-calories"><i class="fas fa-weight"></i></div>
+        <div class="stat-info">
+            <span class="stat-value" id="stat-poids">-</span>
+            <span class="stat-label">Poids Idéal (Moy)</span>
         </div>
     </div>
 </div>
@@ -218,7 +212,10 @@ $allProducts = $stmtP->fetchAll(PDO::FETCH_ASSOC);
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
         <h3 style="margin: 0;"><i class="fa-solid fa-users"></i> Utilisateurs</h3>
         <div style="display:flex; gap:10px;">
-            <input type="text" id="search-users" placeholder="Rechercher (Nom, Email)..." style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px;" onkeyup="searchUsers()">
+            <input type="text" id="search-users" placeholder="Rechercher (Email, Préférence)..." style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px;" onkeyup="searchUsers()">
+            <button onclick="sortPoidsDesc()" class="btn-submit" style="margin-top:0; display:inline-flex; align-items:center; gap:8px; background:#10b981; padding:8px 15px;">
+                <i class="fas fa-sort-amount-down"></i> Trier par Poids
+            </button>
             <a href="../api/export_users.php" class="btn-submit" style="margin-top:0; display:inline-flex; align-items:center; gap:8px; text-decoration:none; padding:8px 15px;">
                 <i class="fas fa-file-pdf"></i> Exporter
             </a>
@@ -229,8 +226,8 @@ $allProducts = $stmtP->fetchAll(PDO::FETCH_ASSOC);
         <thead>
             <tr>
                 <th onclick="sortTable(0)" style="cursor:pointer;">ID <i class="fa-solid fa-sort"></i></th>
-                <th onclick="sortTable(1)" style="cursor:pointer;">Nom <i class="fa-solid fa-sort"></i></th>
-                <th onclick="sortTable(2)" style="cursor:pointer;">Email <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable(1)" style="cursor:pointer;">Email <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable(2)" style="cursor:pointer;">Préférence <i class="fa-solid fa-sort"></i></th>
                 <th onclick="sortTable(3)" style="cursor:pointer;">Âge <i class="fa-solid fa-sort"></i></th>
                 <th onclick="sortTable(4)" style="cursor:pointer;">Poids <i class="fa-solid fa-sort"></i></th>
                 <th onclick="sortTable(5)" style="cursor:pointer;">Calories <i class="fa-solid fa-sort"></i></th>
@@ -241,14 +238,14 @@ $allProducts = $stmtP->fetchAll(PDO::FETCH_ASSOC);
         <tbody>
             <?php foreach ($users as $u): ?>
             <tr>
-                <td><?= $u['id'] ?></td>
-                <td><?= htmlspecialchars($u['nom']) ?></td>
+                <td><?= $u['user_real_id'] ?></td>
                 <td><?= htmlspecialchars($u['email']) ?></td>
-                <td><span class="badge badge-blue"><?= $u['age'] ?></span></td>
-                <td><span class="badge badge-green"><?= $u['poids'] ?> kg</span></td>
-                <td><span class="badge badge-orange"><?= $u['calories'] ?> kcal</span></td>
+                <td><span class="badge badge-blue"><?= htmlspecialchars($u['type_preference'] ?? 'Aucune') ?></span></td>
+                <td><span class="badge badge-blue"><?= $u['age'] ?? '-' ?></span></td>
+                <td><span class="badge badge-green"><?= $u['poids'] ?? '-' ?> kg</span></td>
+                <td><span class="badge badge-orange"><?= $u['calories'] ?? '-' ?> kcal</span></td>
                 <td>
-                    <button onclick="deleteUser(<?= $u['id'] ?>)" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Supprimer">
+                    <button onclick="deleteUser(<?= $u['user_real_id'] ?>)" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Supprimer l'utilisateur">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -352,10 +349,10 @@ function loadStats() {
     fetch("../api/get_stats.php")
     .then(res => res.json())
     .then(data => {
-        document.getElementById('stat-users').textContent = data.total_users;
-        document.getElementById('stat-products').textContent = data.total_products;
-        document.getElementById('stat-categories').textContent = data.total_categories;
+        document.getElementById('stat-prefs').textContent = data.total_preferences;
         document.getElementById('stat-calories').textContent = data.avg_calories + " kcal";
+        document.getElementById('stat-age').textContent = data.avg_age + " ans";
+        document.getElementById('stat-poids').textContent = data.avg_poids + " kg";
     })
     .catch(err => console.error("Erreur stats:", err));
 }
@@ -459,12 +456,12 @@ function searchUsers() {
     let tr = table.getElementsByTagName("tr");
 
     for (let i = 1; i < tr.length; i++) {
-        let tdNom = tr[i].getElementsByTagName("td")[1];
-        let tdEmail = tr[i].getElementsByTagName("td")[2];
-        if (tdNom || tdEmail) {
-            let txtValueNom = tdNom.textContent || tdNom.innerText;
+        let tdEmail = tr[i].getElementsByTagName("td")[1];
+        let tdPref = tr[i].getElementsByTagName("td")[2];
+        if (tdEmail || tdPref) {
             let txtValueEmail = tdEmail.textContent || tdEmail.innerText;
-            if (txtValueNom.toLowerCase().indexOf(filter) > -1 || txtValueEmail.toLowerCase().indexOf(filter) > -1) {
+            let txtValuePref = tdPref.textContent || tdPref.innerText;
+            if (txtValueEmail.toLowerCase().indexOf(filter) > -1 || txtValuePref.toLowerCase().indexOf(filter) > -1) {
                 tr[i].style.display = "";
             } else {
                 tr[i].style.display = "none";
@@ -518,6 +515,34 @@ function sortTable(n) {
                 dir = "desc";
                 switching = true;
             }
+        }
+    }
+}
+
+// ↕️ TRI POIDS DÉCROISSANT (BOUTON DÉDIÉ)
+function sortPoidsDesc() {
+    let table, rows, switching, i, x, y, shouldSwitch;
+    table = document.getElementById("usersTable");
+    switching = true;
+    while (switching) {
+        switching = false;
+        rows = table.rows;
+        for (i = 1; i < (rows.length - 1); i++) {
+            shouldSwitch = false;
+            x = rows[i].getElementsByTagName("TD")[4]; // Colonne Poids (index 4)
+            y = rows[i + 1].getElementsByTagName("TD")[4];
+            
+            let valX = parseFloat(x.innerText) || 0;
+            let valY = parseFloat(y.innerText) || 0;
+
+            if (valX < valY) {
+                shouldSwitch = true;
+                break;
+            }
+        }
+        if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
         }
     }
 }

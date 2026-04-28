@@ -1,6 +1,6 @@
 <?php
 require_once "../config/db.php";
-require_once "../usermodel/UserModel.php";
+require_once "../model/PreferenceModel.php";
 
 class UserController {
 
@@ -25,7 +25,7 @@ class UserController {
         }
 
         try {
-            $data = UserModel::getProfile($pdo, $id_user);
+            $data = PreferenceModel::getProfile($pdo, $id_user);
             echo json_encode(["status" => "success", "data" => $data]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -58,7 +58,7 @@ class UserController {
         }
 
         try {
-            UserModel::saveProfile($pdo, $id_user, $preferences, $allergies);
+            PreferenceModel::saveProfile($pdo, $id_user, $preferences, $allergies);
             echo json_encode(["status" => "success", "message" => "Profil enregistré avec succès"]);
         } catch (Exception $e) {
             http_response_code(500);

@@ -27,7 +27,31 @@ try {
     $stmt->execute([$nom, $email, $preferences, $allergies, $poids, $age, $calories]);
 
     // 🔑 Set session so the user is logged in
-    $_SESSION['user_id'] = $pdo->lastInsertId();
+    $user_id = $pdo->lastInsertId();
+    $_SESSION['user_id'] = $user_id;
+
+    // --- SAVE PREFERENCES ---
+    // On split les préférences ou on crée un tableau avec un élément vide si aucune préférence n'est donnée
+    // pour s'assurer que le poids, l'âge et les calories sont bien enregistrés au moins une fois dans cette table.
+    $prefList = !empty($preferences) ? array_map('trim', explode(',', $preferences)) : [null];
+    
+    $stmtPref = $pdo->prepare("INSERT INTO preferences_alimentaires (id_user, type_preference, poids, age, calories) VALUES (?, ?, ?, ?, ?)");
+    foreach ($prefList as $p) {
+        // On évite d'insérer des chaînes vides, on préfère NULL
+        $pVal = ($p === '') ? null : $p;
+        $stmtPref->execute([$user_id, $pVal, $poids, $age, $calories]);
+    }
+
+    // --- SAVE ALLERGIES ---
+    if (!empty($allergies)) {
+        $allList = array_map('trim', explode(',', $allergies));
+        $stmtAll = $pdo->prepare("INSERT INTO allergies (id_user, nom_allergie) VALUES (?, ?)");
+        foreach ($allList as $a) {
+            if ($a !== '') {
+                $stmtAll->execute([$user_id, $a]);
+            }
+        }
+    }
 
     // 📄 CREATION PDF
     $pdf = new FPDF();
