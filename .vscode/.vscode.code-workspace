@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../config"
+		},
+		{
+			"path": "../controller"
+		},
+		{
+			"path": "../greenbite"
+		},
+		{
+			"path": "../usermodel"
+		},
+		{
+			"path": "../view"
+		}
+	]
+}
