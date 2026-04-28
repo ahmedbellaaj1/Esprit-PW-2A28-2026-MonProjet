@@ -11,8 +11,13 @@ const DB_ADMIN_EMAIL = 'admin@greenbit.local';
 const DB_ADMIN_PASSWORD_HASH = '$2y$10$NGWC2/odjiL57B4VKr0m8.EPJf6dL4vQj7OariCOvS6JLL.NZMGAG';
 
 // Google OAuth Configuration (loaded from .env)
-const GOOGLE_CLIENT_ID = $_ENV['GOOGLE_CLIENT_ID'] ?? '';
-const GOOGLE_CLIENT_SECRET = $_ENV['GOOGLE_CLIENT_SECRET'] ?? '';
+function getGoogleClientId(): string {
+    return $_ENV['GOOGLE_CLIENT_ID'] ?? '';
+}
+
+function getGoogleClientSecret(): string {
+    return $_ENV['GOOGLE_CLIENT_SECRET'] ?? '';
+}
 
 function getServerPdo(): PDO
 {

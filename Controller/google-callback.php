@@ -21,8 +21,8 @@ try {
     
     $postData = [
         'code' => $code,
-        'client_id' => GOOGLE_CLIENT_ID,
-        'client_secret' => GOOGLE_CLIENT_SECRET,
+        'client_id' => getGoogleClientId(),
+        'client_secret' => getGoogleClientSecret(),
         'redirect_uri' => $baseUrl . '/projetwebnova/Controller/google-callback.php',
         'grant_type' => 'authorization_code',
     ];

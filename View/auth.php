@@ -100,7 +100,7 @@ function field_error(array $errors, string $name): string
                             error_log('[Google Auth] Redirect URI: ' . $redirectUri);
                             
                             $googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([
-                                'client_id' => GOOGLE_CLIENT_ID,
+                                'client_id' => getGoogleClientId(),
                                 'redirect_uri' => $redirectUri,
                                 'response_type' => 'code',
                                 'scope' => 'email profile',
