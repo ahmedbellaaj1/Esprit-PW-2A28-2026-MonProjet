@@ -131,6 +131,33 @@ function isValidEmailAddress(string $email): bool
     return filter_var($normalized, FILTER_VALIDATE_EMAIL) !== false;
 }
 
+function isStrongPassword(string $password): array
+{
+    $errors = [];
+    
+    // Check minimum length
+    if (strlen($password) < 8) {
+        $errors[] = 'Le mot de passe doit contenir au moins 8 caracteres.';
+    }
+    
+    // Check for uppercase letter at the beginning
+    if (!preg_match('/^[A-Z]/', $password)) {
+        $errors[] = 'Le mot de passe doit commencer par une lettre majuscule.';
+    }
+    
+    // Check for at least one digit
+    if (!preg_match('/\d/', $password)) {
+        $errors[] = 'Le mot de passe doit contenir au moins un chiffre.';
+    }
+    
+    // Check for at least one special character
+    if (!preg_match('/[!@#$%^&*()_+\-=\[\]{};:\'",.<>?\/\\|`~]/', $password)) {
+        $errors[] = 'Le mot de passe doit contenir au moins un caractere special (!@#$%^&*).';
+    }
+    
+    return $errors;
+}
+
 function storeUploadedUserPhoto(array $file): ?string
 {
     if (!isset($file['error']) || $file['error'] === UPLOAD_ERR_NO_FILE) {

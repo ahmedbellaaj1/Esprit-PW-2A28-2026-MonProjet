@@ -30,6 +30,7 @@ try {
         $prenom = trim($_POST['prenom'] ?? '');
         $email = strtolower(trim($_POST['email'] ?? ''));
         $password = (string) ($_POST['mot_de_passe'] ?? '');
+        $captcha = strtoupper(trim($_POST['captcha'] ?? ''));
         $role = $_POST['role'] ?? 'user';
         $statut = $_POST['statut'] ?? 'actif';
         $errors = [];
@@ -48,6 +49,20 @@ try {
             $errors['mot_de_passe'] = $password === '' ? 'Le mot de passe est obligatoire.' : null;
             $errors = array_filter($errors, static fn ($value) => $value !== null);
 
+            setFlash('error', 'Veuillez corriger les champs signales.');
+            redirectWithFormState('register-panel', $errors, $oldInput);
+        }
+
+        // Validate CAPTCHA
+        if ($captcha === '' || !isset($_SESSION['captcha_code'])) {
+            $errors['captcha'] = 'Le CAPTCHA est obligatoire.';
+        } elseif (strtoupper($captcha) !== strtoupper($_SESSION['captcha_code'])) {
+            $errors['captcha'] = 'Le code CAPTCHA est incorrect. Veuillez reessayer.';
+            // Regenerate CAPTCHA for next attempt
+            unset($_SESSION['captcha_code']);
+        }
+
+        if ($errors !== []) {
             setFlash('error', 'Veuillez corriger les champs signales.');
             redirectWithFormState('register-panel', $errors, $oldInput);
         }
@@ -72,6 +87,11 @@ try {
 
         if ($password === '') {
             $errors['mot_de_passe'] = 'Le mot de passe est obligatoire.';
+        } else {
+            $passwordErrors = isStrongPassword($password);
+            if ($passwordErrors !== []) {
+                $errors['mot_de_passe'] = implode(' ', $passwordErrors);
+            }
         }
 
         if ($errors !== []) {

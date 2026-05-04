@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Audio CAPTCHA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0f766e;
+            border-bottom: 3px solid #14b8a6;
+            padding-bottom: 10px;
+        }
+        .test-box {
+            background: #f8fafc;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #14b8a6;
+            border-radius: 4px;
+        }
+        button {
+            background: #0f766e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #0c5f58;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .volume-control {
+            margin: 20px 0;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+        }
+        .frequency-display {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .freq-item {
+            background: white;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .freq-item .char {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0f766e;
+        }
+        .freq-item .freq {
+            color: #64748b;
+            font-size: 12px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        input[type="text"]:focus {
+            border-color: #14b8a6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔊 Test Audio CAPTCHA</h1>
+
+        <div class="test-box">
+            <h2>1. Infos Système Audio</h2>
+            <div id="system-status"></div>
+        </div>
+
+        <div class="test-box">
+            <h2>2. Contrôle du Volume</h2>
+            <div class="volume-control">
+                <label for="volume-slider">Volume: <span id="volume-value">50</span>%</label>
+                <input type="range" id="volume-slider" min="0" max="100" value="50">
+            </div>
+        </div>
+
+        <div class="test-box">
+            <h2>3. Test Audio Simple</h2>
+            <p>Cliquez pour jouer des sons simples :</p>
+            <button onclick="playSimpleBeep(440)">La (440 Hz)</button>
+            <button onclick="playSimpleBeep(880)">La (880 Hz)</button>
+            <button onclick="playSimpleBeep(1200)">Chiffre (1200 Hz)</button>
+            <div id="simple-status"></div>
+        </div>
+
+        <div class="test-box">
+            <h2>4. Test CAPTCHA Prédéfini</h2>
+            <p>Entrez un code CAPTCHA et cliquez sur le bouton pour l'écouter :</p>
+            <input type="text" id="captcha-test-input" placeholder="Ex: ABC123" value="ABC123">
+            <button onclick="playCaptchaAudio()">🔊 Écouter le CAPTCHA</button>
+            <div id="captcha-status"></div>
+        </div>
+
+        <div class="test-box">
+            <h2>5. Fréquences Utilisées</h2>
+            <div class="frequency-display" id="freq-display"></div>
+        </div>
+
+        <div class="test-box">
+            <h2>6. Débogage Console</h2>
+            <p>Appuyez sur F12 pour voir les logs détaillés.</p>
+            <button onclick="testConsoleLogging()">Test Logging</button>
+        </div>
+    </div>
+
+    <script>
+        var globalVolume = 0.5;
+        var audioContext = null;
+
+        function getAudioContext() {
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    console.log('✅ Audio Context créé');
+                } catch(e) {
+                    console.error('❌ Erreur Audio Context:', e);
+                    alert('Web Audio API non supportée');
+                }
+            }
+            return audioContext;
+        }
+
+        // Mettre à jour le système au chargement
+        window.addEventListener('load', function() {
+            updateSystemStatus();
+            generateFrequencyDisplay();
+            
+            document.getElementById('volume-slider').addEventListener('change', function() {
+                globalVolume = this.value / 100;
+                document.getElementById('volume-value').textContent = this.value;
+            });
+        });
+
+        function updateSystemStatus() {
+            var ctx = getAudioContext();
+            var html = '';
+            
+            html += '<div class="status info">Browser: ' + navigator.userAgent.substring(0, 50) + '...</div>';
+            html += '<div class="status ' + (ctx ? 'success' : 'error') + '">' + 
+                    (ctx ? '✅ Web Audio API: Disponible' : '❌ Web Audio API: Non disponible') + 
+                    '</div>';
+            
+            if (ctx) {
+                html += '<div class="status info">Sample Rate: ' + ctx.sampleRate + ' Hz</div>';
+                html += '<div class="status info">State: ' + ctx.state + '</div>';
+            }
+            
+            document.getElementById('system-status').innerHTML = html;
+        }
+
+        function playSimpleBeep(frequency) {
+            var ctx = getAudioContext();
+            if (!ctx) return;
+
+            // Resume si suspendu
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+
+            var startTime = ctx.currentTime + 0.1;
+            var duration = 0.5;
+            
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.value = frequency;
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            // Enveloppe
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(globalVolume, startTime + 0.05);
+            gain.gain.setValueAtTime(globalVolume, startTime + duration - 0.1);
+            gain.gain.linearRampToValueAtTime(0, startTime + duration);
+            
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+            
+            document.getElementById('simple-status').innerHTML = 
+                '<div class="status success">✅ Son joué: ' + frequency + ' Hz</div>';
+        }
+
+        function playCaptchaAudio() {
+            var code = document.getElementById('captcha-test-input').value.toUpperCase();
+            if (!code) {
+                document.getElementById('captcha-status').innerHTML = 
+                    '<div class="status error">❌ Entrez un code CAPTCHA</div>';
+                return;
+            }
+
+            try {
+                var ctx = getAudioContext();
+                if (!ctx) throw new Error('Audio Context non disponible');
+
+                if (ctx.state === 'suspended') {
+                    ctx.resume();
+                }
+
+                var startTime = ctx.currentTime + 0.2;
+                var charDuration = 0.4;
+                var silenceDuration = 0.15;
+
+                console.log('🎵 Lecture du CAPTCHA:', code);
+
+                code.split('').forEach(function(char, index) {
+                    var charStartTime = startTime + (index * (charDuration + silenceDuration));
+                    
+                    var charCode = char.charCodeAt(0);
+                    var frequency;
+                    
+                    if (charCode >= 65 && charCode <= 90) {
+                        frequency = 400 + ((charCode - 65) / 25) * 400;
+                    } else if (charCode >= 97 && charCode <= 122) {
+                        frequency = 800 + ((charCode - 97) / 25) * 400;
+                    } else {
+                        var digitValue = parseInt(char);
+                        frequency = 1200 + (digitValue / 9) * 400;
+                    }
+
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(frequency, charStartTime);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    gain.gain.setValueAtTime(0, charStartTime);
+                    gain.gain.linearRampToValueAtTime(globalVolume, charStartTime + 0.05);
+                    gain.gain.setValueAtTime(globalVolume, charStartTime + charDuration - 0.1);
+                    gain.gain.linearRampToValueAtTime(0, charStartTime + charDuration);
+                    
+                    osc.start(charStartTime);
+                    osc.stop(charStartTime + charDuration);
+                    
+                    console.log('  Char ' + (index + 1) + ': ' + char + ' → ' + Math.round(frequency) + ' Hz');
+                });
+
+                document.getElementById('captcha-status').innerHTML = 
+                    '<div class="status success">✅ CAPTCHA: ' + code + ' - Son lancé!</div>';
+
+            } catch(err) {
+                console.error('❌ Erreur:', err);
+                document.getElementById('captcha-status').innerHTML = 
+                    '<div class="status error">❌ Erreur: ' + err.message + '</div>';
+            }
+        }
+
+        function generateFrequencyDisplay() {
+            var code = 'ABC123';
+            var html = '';
+            
+            code.split('').forEach(function(char) {
+                var charCode = char.charCodeAt(0);
+                var frequency;
+                
+                if (charCode >= 65 && charCode <= 90) {
+                    frequency = 400 + ((charCode - 65) / 25) * 400;
+                } else if (charCode >= 97 && charCode <= 122) {
+                    frequency = 800 + ((charCode - 97) / 25) * 400;
+                } else {
+                    var digitValue = parseInt(char);
+                    frequency = 1200 + (digitValue / 9) * 400;
+                }
+                
+                html += '<div class="freq-item">' +
+                        '<div class="char">' + char + '</div>' +
+                        '<div class="freq">' + Math.round(frequency) + ' Hz</div>' +
+                        '</div>';
+            });
+            
+            document.getElementById('freq-display').innerHTML = html;
+        }
+
+        function testConsoleLogging() {
+            console.log('=== TEST CAPTCHA DEBUG ===');
+            console.log('Audio Context disponible:', !!audioContext);
+            console.log('Volume global:', globalVolume);
+            console.log('Navigateur:', navigator.userAgent);
+            console.log('================================');
+        }
+    </script>
+</body>
+</html>
