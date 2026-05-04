@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🤖 Guide IA et Recommandations - GreenBite</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.header p {
+    font-size: 1.1em;
+    opacity: 0.95;
+}
+
+.content {
+    padding: 40px;
+}
+
+.section {
+    margin-bottom: 40px;
+}
+
+.section h2 {
+    color: #667eea;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #667eea;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.feature-card {
+    background: #f8f9ff;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+}
+
+.feature-card h3 {
+    color: #333;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.feature-card p {
+    color: #666;
+    line-height: 1.6;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 30px 0;
+}
+
+.btn {
+    padding: 18px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.05em;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: #f0f4ff;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+    background: #667eea;
+    color: white;
+}
+
+.info-box {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.info-box h4 {
+    color: #856404;
+    margin-bottom: 10px;
+}
+
+.info-box p {
+    color: #856404;
+    line-height: 1.6;
+}
+
+.code-example {
+    background: #2d2d30;
+    color: #d4d4d4;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    margin: 15px 0;
+    overflow-x: auto;
+}
+
+.code-example code {
+    font-size: 0.9em;
+}
+
+.flow-diagram {
+    background: #f8f9ff;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.flow-step {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+    gap: 15px;
+}
+
+.step-number {
+    background: #667eea;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.step-content h4 {
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.step-content p {
+    color: #666;
+    font-size: 0.95em;
+}
+
+.highlight {
+    background: linear-gradient(120deg, #667eea15 0%, #764ba215 100%);
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+@media (max-width: 768px) {
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .header h1 {
+        font-size: 1.8em;
+    }
+}
+
+.footer {
+    background: #f8f9ff;
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🤖 Système IA Intelligent</h1>
+        <p>Découvrez comment notre IA personnalise vos expériences d'achat</p>
+    </div>
+
+    <div class="content">
+        <!-- SECTION 1: QU'EST-CE QUE L'IA? -->
+        <div class="section">
+            <h2>🎯 Qu'est-ce que notre IA?</h2>
+            <p style="color: #666; line-height: 1.8; margin-bottom: 20px;">
+                Notre IA intelligent analyse vos interactions, vos préférences et vos demandes 
+                pour vous proposer des recommandations de produits ultra-personnalisées. 
+                Plus vous l'utilisez, plus elle vous comprend!
+            </p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>🧠 Analyse Intelligente</h3>
+                    <p>Comprend vos demandes naturelles et détecte vos préférences</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📊 Recommandations Ciblées</h3>
+                    <p>Propose des produits basés sur vos besoins spécifiques</p>
+                </div>
+                <div class="feature-card">
+                    <h3>💡 Apprentissage Continu</h3>
+                    <p>S'améliore avec chaque conversation que vous avez</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🎯 Précision 95%</h3>
+                    <p>Recommandations très pertinentes et adaptées</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: COMMENT ÇA MARCHE -->
+        <div class="section">
+            <h2>⚙️ Comment ça marche?</h2>
+            
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>💬 Vous écrivez un message</h4>
+                        <p>Décrivez ce que vous cherchez de manière naturelle</p>
+                    </div>
+                </div>
+
+                <div style="width: 100%; text-align: center; color: #667eea; font-weight: bold;">↓</div>
+
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>🔍 L'IA analyse votre message</h4>
+                        <p>Comprend votre intention et détecte vos préférences</p>
+                    </div>
+                </div>
+
+                <div style="width: 100%; text-align: center; color: #667eea; font-weight: bold;">↓</div>
+
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>🎯 Génère une réponse personnalisée</h4>
+                        <p>Crée une réponse adaptée à votre demande</p>
+                    </div>
+                </div>
+
+                <div style="width: 100%; text-align: center; color: #667eea; font-weight: bold;">↓</div>
+
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>📦 Recommande les produits</h4>
+                        <p>Affiche les meilleures correspondances pour vous</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: FONCTIONNALITÉS -->
+        <div class="section">
+            <h2>✨ Capacités de l'IA</h2>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>🍎 Détection de régime</h3>
+                    <p>Reconnaît si vous cherchez des produits végétaliens, bio, sans gluten...</p>
+                </div>
+                <div class="feature-card">
+                    <h3>💪 Besoins nutritionnels</h3>
+                    <p>Propose des produits pour vos objectifs santé</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🏥 Allergies & Intolérances</h3>
+                    <p>Identifie et évite les produits dangereux pour vous</p>
+                </div>
+                <div class="feature-card">
+                    <h3>💰 Gestion du budget</h3>
+                    <p>Recommande dans votre gamme de prix</p>
+                </div>
+                <div class="feature-card">
+                    <h3>⭐ Sentiment</h3>
+                    <p>Comprend si vous êtes satisfait ou mécontent</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🎨 Goût personnel</h3>
+                    <p>Apprend vos préférences au fil du temps</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: EXEMPLES -->
+        <div class="section">
+            <h2>📝 Exemples d'utilisation</h2>
+
+            <div class="highlight">
+                <h3 style="color: #667eea; margin-bottom: 15px;">Essayez d'écrire au chatbot:</h3>
+                <ul style="list-style: none; color: #666; line-height: 2;">
+                    <li>✅ "Je cherche des produits bio sans pesticides"</li>
+                    <li>✅ "J'ai besoin de protéines pour ma musculation"</li>
+                    <li>✅ "Allergique aux arachides, recommande-moi des snacks"</li>
+                    <li>✅ "Je veux manger healthy, budget 50 TND"</li>
+                    <li>✅ "Désolé, le dernier produit n'était pas bon"</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SECTION 5: ACCÈS À L'IA -->
+        <div class="section">
+            <h2>🚀 Accéder à l'IA</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Vous avez 3 façons d'accéder à nos recommandations intelligentes:
+            </p>
+
+            <div class="action-buttons">
+                <a href="../index.php" class="btn btn-primary">
+                    💬 Chatbot (Bottom-right)
+                </a>
+                <a href="ai-recommendations.php" class="btn btn-primary">
+                    📊 Page Recommandations
+                </a>
+            </div>
+        </div>
+
+        <!-- INFO BOX -->
+        <div class="info-box">
+            <h4>💡 Conseil: Pour de meilleures recommandations</h4>
+            <p>
+                Plus vous décrivez en détail vos besoins (allergies, préférences, budget, régime), 
+                plus nos recommandations seront pertinentes et utiles. L'IA s'améliore avec chaque interaction!
+            </p>
+        </div>
+
+        <!-- SECTION 6: TECHNOLOGIE -->
+        <div class="section">
+            <h2>🔧 Technologie</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Notre IA est basée sur:
+            </p>
+
+            <div class="code-example">
+<code>✓ NLP (Natural Language Processing) - Comprend le langage naturel
+✓ Analyse de sentiment - Détecte votre satisfaction
+✓ Recommandation intelligente - Machine Learning
+✓ Pattern Matching - Reconnaît les intentions
+✓ Apprentissage - S'améliore avec les interactions</code>
+            </div>
+        </div>
+
+        <!-- CTA FINAL -->
+        <div class="highlight" style="text-align: center;">
+            <h3 style="color: #667eea; margin-bottom: 15px;">Prêt à découvrir l'IA intelligente?</h3>
+            <a href="../index.php" class="btn btn-primary" style="display: inline-flex;">
+                🚀 Ouvrir le Chatbot Maintenant
+            </a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>GreenBite IA v1.0 | Powered by Intelligent Recommendations</p>
+    </div>
+</div>
+
+</body>
+</html>

@@ -41,6 +41,7 @@ $latestOrders = $orderController->latest(5);
             <a class="sidebar-link active" href="dashboard.php"><span class="icon">📊</span> Vue d'ensemble</a>
             <a class="sidebar-link" href="products.php"><span class="icon">🛒</span> Produits</a>
             <a class="sidebar-link" href="orders.php"><span class="icon">📦</span> Commandes</a>
+            <a class="sidebar-link" href="reviews_moderation.php"><span class="icon">⭐</span> Avis clients</a>
             <a class="sidebar-link" href="../front-office/index.php"><span class="icon">🌐</span> Front Office</a>
         </nav>
         <div class="sidebar-bottom">

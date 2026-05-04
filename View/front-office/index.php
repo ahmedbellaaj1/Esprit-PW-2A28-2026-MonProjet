@@ -39,11 +39,13 @@ $categories = $controller->categories();
         <span class="navbar-logo-text">Green<span>Bite</span></span>
     </a>
     <ul class="navbar-links">
-        <li><a href="#">Accueil</a></li>
+        <li><a href="index.php">Accueil</a></li>
         <li><a href="#">Recettes</a></li>
-        <li><a href="#" class="active">Produits</a></li>
+        <li><a href="index.php" class="active">Produits</a></li>
         <li><a href="#">Dons</a></li>
         <li><a href="#">Magasins</a></li>
+        <li><a href="order-history.php" title="Voir mon historique d'achats">📋 Historique</a></li>
+        <li><a href="barcode-scanner.php" title="Scanner un code-barres" style="color:#16a34a;font-weight:600;">📷 Scanner</a></li>
     </ul>
     <div class="navbar-right">
         <a class="primary-btn nav-quick-btn" href="../back-office/dashboard.php">Dashboard Admin</a>
@@ -656,5 +658,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script src="../assets/cart.js"></script>
+
+<?php require_once __DIR__ . '/../includes/chatbot_widget.php'; ?>
+
 </body>
 </html>

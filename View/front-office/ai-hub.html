@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🤖 GreenBite IA - Centre de Recommandations</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.hero {
+    background: white;
+    border-radius: 20px;
+    padding: 50px;
+    text-align: center;
+    margin-bottom: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.hero h1 {
+    font-size: 3em;
+    color: #667eea;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero p {
+    font-size: 1.2em;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #999;
+    font-style: italic;
+    margin-bottom: 30px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.stat-card {
+    background: #f8f9ff;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+}
+
+.stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.stat-label {
+    color: #999;
+    font-size: 0.9em;
+}
+
+.grid-main {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    font-size: 2em;
+    text-align: center;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-content {
+    padding: 25px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.card h2 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 1.3em;
+}
+
+.card p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.features {
+    list-style: none;
+    margin: 15px 0;
+}
+
+.features li {
+    color: #666;
+    padding: 6px 0;
+    padding-left: 20px;
+    position: relative;
+}
+
+.features li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #667eea;
+    font-weight: bold;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    text-align: center;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: #f0f4ff;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+    background: #667eea;
+    color: white;
+}
+
+.info-banner {
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    border: 2px solid #667eea;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.info-banner-icon {
+    font-size: 3em;
+    flex-shrink: 0;
+}
+
+.info-banner-content h3 {
+    color: #667eea;
+    margin-bottom: 8px;
+}
+
+.info-banner-content p {
+    color: #666;
+}
+
+.quick-access {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.quick-access h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
+.quick-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.quick-btn {
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.05em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.quick-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.section-divider {
+    text-align: center;
+    margin: 50px 0;
+    color: #667eea;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+@media (max-width: 768px) {
+    .hero {
+        padding: 30px;
+    }
+    
+    .hero h1 {
+        font-size: 2em;
+    }
+    
+    .grid-main {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.footer {
+    text-align: center;
+    color: white;
+    margin-top: 40px;
+    padding: 20px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HERO SECTION -->
+    <div class="hero">
+        <h1>🤖 GreenBite IA Intelligence</h1>
+        <p>Centre de Recommandations Intelligentes</p>
+        <div class="subtitle">Bienvenue sur votre hub IA personnalisé</div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">95%</div>
+                <div class="stat-label">Précision</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">1000+</div>
+                <div class="stat-label">Produits</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">Scénarios</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Disponible</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INFO BANNER -->
+    <div class="info-banner">
+        <div class="info-banner-icon">💡</div>
+        <div class="info-banner-content">
+            <h3>Qu'est-ce que l'IA GreenBite?</h3>
+            <p>
+                Notre système IA intelligent analyse vos besoins, vos préférences et vos demandes 
+                pour vous recommander les produits les plus adaptés. Plus vous l'utilisez, plus elle vous comprend!
+            </p>
+        </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="grid-main">
+        <!-- CARD 1: CHATBOT -->
+        <div class="card">
+            <div class="card-header">💬</div>
+            <div class="card-content">
+                <h2>Chatbot IA</h2>
+                <p>Discutez directement avec notre IA pour obtenir des recommandations instantanées</p>
+                <ul class="features">
+                    <li>Réponses en temps réel</li>
+                    <li>Conversations naturelles</li>
+                    <li>Recommandations rapides</li>
+                    <li>Historique des chats</li>
+                </ul>
+                <div class="btn-group">
+                    <a href="index.php" class="btn btn-primary">Ouvrir le Chatbot</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 2: PAGE RECOMMENDATIONS -->
+        <div class="card">
+            <div class="card-header">📊</div>
+            <div class="card-content">
+                <h2>Page Recommandations</h2>
+                <p>Découvrez notre sélection de produits recommandés spécialement pour vous</p>
+                <ul class="features">
+                    <li>Produits les mieux notés</li>
+                    <li>Affichage professionnel</li>
+                    <li>Filtres avancés</li>
+                    <li>Comparaisons faciles</li>
+                </ul>
+                <div class="btn-group">
+                    <a href="ai-recommendations.php" class="btn btn-primary">Voir les Recommandations</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 3: GUIDE IA -->
+        <div class="card">
+            <div class="card-header">📚</div>
+            <div class="card-content">
+                <h2>Guide Complet IA</h2>
+                <p>Apprenez comment fonctionne notre IA et maximisez vos recommandations</p>
+                <ul class="features">
+                    <li>Comment ça marche</li>
+                    <li>Capacités de l'IA</li>
+                    <li>Exemples d'utilisation</li>
+                    <li>Conseils & astuces</li>
+                </ul>
+                <div class="btn-group">
+                    <a href="ia-guide.html" class="btn btn-primary">Lire le Guide</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK ACCESS -->
+    <div class="quick-access">
+        <h2>🚀 Accès Rapide</h2>
+        <div class="quick-buttons">
+            <a href="index.php" class="quick-btn">💬 Chatbot</a>
+            <a href="ai-recommendations.php" class="quick-btn">📊 Recommandations</a>
+            <a href="ia-guide.html" class="quick-btn">📚 Guide</a>
+            <a href="index.php" class="quick-btn">🛍️ Boutique</a>
+        </div>
+    </div>
+
+    <!-- EXAMPLES SECTION -->
+    <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); margin-bottom: 40px;">
+        <h2 style="color: #667eea; margin-bottom: 20px;">💡 Essayez ces requêtes dans le Chatbot</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+            <div style="background: #f0f4ff; padding: 15px; border-radius: 10px;">
+                <strong style="color: #667eea;">🍎 Régime Alimentaire</strong>
+                <p style="color: #666; margin-top: 8px; font-size: 0.95em;">
+                    "Je cherche des produits bio sans pesticides"
+                </p>
+            </div>
+            <div style="background: #f0f4ff; padding: 15px; border-radius: 10px;">
+                <strong style="color: #667eea;">💪 Objectifs Santé</strong>
+                <p style="color: #666; margin-top: 8px; font-size: 0.95em;">
+                    "J'ai besoin de protéines pour ma musculation"
+                </p>
+            </div>
+            <div style="background: #f0f4ff; padding: 15px; border-radius: 10px;">
+                <strong style="color: #667eea;">🏥 Allergies</strong>
+                <p style="color: #666; margin-top: 8px; font-size: 0.95em;">
+                    "Allergique aux arachides, recommande des snacks"
+                </p>
+            </div>
+            <div style="background: #f0f4ff; padding: 15px; border-radius: 10px;">
+                <strong style="color: #667eea;">💰 Budget</strong>
+                <p style="color: #666; margin-top: 8px; font-size: 0.95em;">
+                    "Je veux manger healthy, budget 50 TND"
+                </p>
+            </div>
+            <div style="background: #f0f4ff; padding: 15px; border-radius: 10px;">
+                <strong style="color: #667eea;">😋 Goûts</strong>
+                <p style="color: #666; margin-top: 8px; font-size: 0.95em;">
+                    "J'adore les fruits rouges et les smoothies"
+                </p>
+            </div>
+            <div style="background: #f0f4ff; padding: 15px; border-radius: 10px;">
+                <strong style="color: #667eea;">⭐ Feedback</strong>
+                <p style="color: #666; margin-top: 8px; font-size: 0.95em;">
+                    "Le dernier produit n'était pas bon, autre chose?"
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p><strong>GreenBite IA Intelligence v1.0</strong></p>
+        <p>Recommandations Intelligentes • Disponible 24/7 • 100% Gratuit</p>
+    </div>
+</div>
+
+</body>
+</html>
