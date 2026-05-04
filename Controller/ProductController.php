@@ -336,7 +336,6 @@ final class ProductController
      * B: 250-500        (bon)
      * C: 500-750        (moyen)
      * D: 750-1000       (moins bon)
-     * E: >= 1000        (mauvais)
      */
     private function calculateNutriscore(float $calories, float $proteines, float $glucides, float $lipides): string
     {
