@@ -10,13 +10,93 @@ class EvenementController {
     }
 
     /**
+     * Validation PHP des données avant insertion
+     * @param array $data
+     * @return array
+     */
+    private function validateEvenementData($data) {
+        $errors = [];
+        
+        // Validation du titre
+        if (empty($data['titre'])) {
+            $errors['titre'] = "Le titre est obligatoire";
+        } elseif (strlen($data['titre']) < 3) {
+            $errors['titre'] = "Le titre doit contenir au moins 3 caractères";
+        } elseif (strlen($data['titre']) > 100) {
+            $errors['titre'] = "Le titre ne peut pas dépasser 100 caractères";
+        } elseif (!preg_match('/^[a-zA-Z0-9\s\-\'àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]+$/', $data['titre'])) {
+            $errors['titre'] = "Le titre contient des caractères non autorisés";
+        }
+        
+        // Validation de la description
+        if (empty($data['description'])) {
+            $errors['description'] = "La description est obligatoire";
+        } elseif (strlen($data['description']) < 10) {
+            $errors['description'] = "La description doit contenir au moins 10 caractères";
+        } elseif (strlen($data['description']) > 5000) {
+            $errors['description'] = "La description ne peut pas dépasser 5000 caractères";
+        }
+        
+        // Validation de la date
+        if (empty($data['date_event'])) {
+            $errors['date_event'] = "La date est obligatoire";
+        } else {
+            $dateObj = DateTime::createFromFormat('Y-m-d', $data['date_event']);
+            if (!$dateObj || $dateObj->format('Y-m-d') !== $data['date_event']) {
+                $errors['date_event'] = "Format de date invalide. Utilisez AAAA-MM-JJ";
+            } elseif ($dateObj < new DateTime()) {
+                $errors['date_event'] = "La date ne peut pas être dans le passé";
+            }
+        }
+        
+        // Validation du lieu
+        if (empty($data['lieu'])) {
+            $errors['lieu'] = "Le lieu est obligatoire";
+        } elseif (strlen($data['lieu']) < 2) {
+            $errors['lieu'] = "Le lieu doit contenir au moins 2 caractères";
+        } elseif (strlen($data['lieu']) > 100) {
+            $errors['lieu'] = "Le lieu ne peut pas dépasser 100 caractères";
+        }
+        
+        // Validation du type
+        $validTypes = ['Atelier', 'Conférence', 'Festival', 'Autre'];
+        if (empty($data['type'])) {
+            $errors['type'] = "Le type est obligatoire";
+        } elseif (!in_array($data['type'], $validTypes)) {
+            $errors['type'] = "Type d'événement invalide";
+        }
+        
+        // Validation de l'organisateur
+        if (empty($data['organisateur_id'])) {
+            $errors['organisateur_id'] = "L'organisateur est obligatoire";
+        } elseif (!is_numeric($data['organisateur_id']) || $data['organisateur_id'] <= 0) {
+            $errors['organisateur_id'] = "Veuillez sélectionner un organisateur valide";
+        }
+        
+        return $errors;
+    }
+
+    /**
      * CREATE - Ajouter un événement
      */
     public function addEvenement($event) {
         try {
-            if (!$event->isValid()) {
-                $errors = $event->getErrors();
+            $data = [
+                'titre' => $event->getTitre(),
+                'description' => $event->getDescription(),
+                'date_event' => $event->getDate(),
+                'lieu' => $event->getLieu(),
+                'type' => $event->getType(),
+                'organisateur_id' => $event->getOrganisateurId()
+            ];
+            
+            $errors = $this->validateEvenementData($data);
+            if (!empty($errors)) {
                 throw new Exception(implode(', ', $errors));
+            }
+            
+            if (!$this->organisateurExists($event->getOrganisateurId())) {
+                throw new Exception("L'organisateur sélectionné n'existe pas");
             }
 
             $sql = "INSERT INTO evenement (titre, description, date_event, lieu, type, organisateur_id) 
@@ -24,10 +104,10 @@ class EvenementController {
             
             $query = $this->db->prepare($sql);
             $result = $query->execute([
-                'titre' => $event->getTitre(),
-                'description' => $event->getDescription(),
+                'titre' => htmlspecialchars($event->getTitre(), ENT_QUOTES),
+                'description' => htmlspecialchars($event->getDescription(), ENT_QUOTES),
                 'date_event' => $event->getDate(),
-                'lieu' => $event->getLieu(),
+                'lieu' => htmlspecialchars($event->getLieu(), ENT_QUOTES),
                 'type' => $event->getType(),
                 'organisateur_id' => $event->getOrganisateurId()
             ]);
@@ -105,7 +185,7 @@ class EvenementController {
     public function getEvenementById($id) {
         try {
             $id = filter_var($id, FILTER_VALIDATE_INT);
-            if (!$id) {
+            if (!$id || $id <= 0) {
                 throw new Exception("ID invalide");
             }
 
@@ -135,6 +215,10 @@ class EvenementController {
     public function getEventsByType($type) {
         try {
             $type = trim($type);
+            if (empty($type)) {
+                return [];
+            }
+            
             $validTypes = ['Atelier', 'Conférence', 'Festival', 'Autre'];
             if (!in_array($type, $validTypes)) {
                 return [];
@@ -155,7 +239,7 @@ class EvenementController {
     }
 
     /**
-     * READ - Rechercher des événements
+     * READ - Recherche simple
      */
     public function searchEvents($keyword) {
         try {
@@ -164,7 +248,9 @@ class EvenementController {
                 return $this->getUpcomingEvents();
             }
             
+            $keyword = htmlspecialchars($keyword, ENT_QUOTES);
             $searchTerm = '%' . $keyword . '%';
+            
             $sql = "SELECT e.*, o.nom as organisateur_nom 
                     FROM evenement e 
                     LEFT JOIN organisateur o ON e.organisateur_id = o.id 
@@ -184,12 +270,144 @@ class EvenementController {
     }
 
     /**
+     * READ - RECHERCHE AVANCÉE avec filtres multiples
+     * @param array $filters
+     * @return array
+     */
+    public function searchAdvanced($filters) {
+        try {
+            $sql = "SELECT e.*, o.nom as organisateur_nom, o.email as organisateur_email 
+                    FROM evenement e 
+                    LEFT JOIN organisateur o ON e.organisateur_id = o.id 
+                    WHERE 1=1";
+            $params = [];
+            
+            // Filtre par mot-clé (titre, description, lieu, organisateur)
+            if (!empty($filters['keyword'])) {
+                $keyword = '%' . trim($filters['keyword']) . '%';
+                $sql .= " AND (e.titre LIKE :keyword 
+                             OR e.description LIKE :keyword 
+                             OR e.lieu LIKE :keyword 
+                             OR o.nom LIKE :keyword)";
+                $params['keyword'] = $keyword;
+            }
+            
+            // Filtre par type
+            if (!empty($filters['type']) && $filters['type'] != 'all') {
+                $validTypes = ['Atelier', 'Conférence', 'Festival', 'Autre'];
+                if (in_array($filters['type'], $validTypes)) {
+                    $sql .= " AND e.type = :type";
+                    $params['type'] = $filters['type'];
+                }
+            }
+            
+            // Filtre par lieu
+            if (!empty($filters['lieu'])) {
+                $sql .= " AND e.lieu LIKE :lieu";
+                $params['lieu'] = '%' . trim($filters['lieu']) . '%';
+            }
+            
+            // Filtre par organisateur
+            if (!empty($filters['organisateur_id']) && $filters['organisateur_id'] != 'all') {
+                $orgId = filter_var($filters['organisateur_id'], FILTER_VALIDATE_INT);
+                if ($orgId && $orgId > 0) {
+                    $sql .= " AND e.organisateur_id = :organisateur_id";
+                    $params['organisateur_id'] = $orgId;
+                }
+            }
+            
+            // Filtre par date de début
+            if (!empty($filters['date_debut'])) {
+                $dateDebut = trim($filters['date_debut']);
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateDebut)) {
+                    $sql .= " AND e.date_event >= :date_debut";
+                    $params['date_debut'] = $dateDebut;
+                }
+            }
+            
+            // Filtre par date de fin
+            if (!empty($filters['date_fin'])) {
+                $dateFin = trim($filters['date_fin']);
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFin)) {
+                    $sql .= " AND e.date_event <= :date_fin";
+                    $params['date_fin'] = $dateFin;
+                }
+            }
+            
+            // Filtre par statut (à venir / passé / aujourd'hui)
+            if (!empty($filters['statut'])) {
+                if ($filters['statut'] == 'upcoming') {
+                    $sql .= " AND e.date_event >= CURDATE()";
+                } elseif ($filters['statut'] == 'past') {
+                    $sql .= " AND e.date_event < CURDATE()";
+                } elseif ($filters['statut'] == 'today') {
+                    $sql .= " AND e.date_event = CURDATE()";
+                }
+            }
+            
+            // Tri personnalisé
+            $orderBy = "e.date_event ASC";
+            if (!empty($filters['tri'])) {
+                switch ($filters['tri']) {
+                    case 'date_asc':
+                        $orderBy = "e.date_event ASC";
+                        break;
+                    case 'date_desc':
+                        $orderBy = "e.date_event DESC";
+                        break;
+                    case 'titre_asc':
+                        $orderBy = "e.titre ASC";
+                        break;
+                    case 'titre_desc':
+                        $orderBy = "e.titre DESC";
+                        break;
+                    case 'lieu_asc':
+                        $orderBy = "e.lieu ASC";
+                        break;
+                    case 'type_asc':
+                        $orderBy = "e.type ASC";
+                        break;
+                    case 'organisateur_asc':
+                        $orderBy = "o.nom ASC";
+                        break;
+                    default:
+                        $orderBy = "e.date_event ASC";
+                }
+            }
+            $sql .= " ORDER BY " . $orderBy;
+            
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
+            return $query->fetchAll();
+            
+        } catch (Exception $e) {
+            error_log("SearchAdvanced error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * READ - Obtenir tous les lieux distincts pour les filtres
+     * @return array
+     */
+    public function getAllLieus() {
+        try {
+            $sql = "SELECT DISTINCT lieu FROM evenement ORDER BY lieu ASC";
+            $result = $this->db->query($sql);
+            return $result->fetchAll();
+        } catch (Exception $e) {
+            error_log("GetAllLieus error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
      * READ - Événements par organisateur
      */
     public function getEventsByOrganisateur($organisateur_id) {
         try {
             $organisateur_id = filter_var($organisateur_id, FILTER_VALIDATE_INT);
-            if (!$organisateur_id) {
+            if (!$organisateur_id || $organisateur_id <= 0) {
                 return [];
             }
 
@@ -213,7 +431,7 @@ class EvenementController {
     public function countEventsByOrganisateur($organisateur_id) {
         try {
             $organisateur_id = filter_var($organisateur_id, FILTER_VALIDATE_INT);
-            if (!$organisateur_id) {
+            if (!$organisateur_id || $organisateur_id <= 0) {
                 return 0;
             }
 
@@ -221,7 +439,7 @@ class EvenementController {
             $query = $this->db->prepare($sql);
             $query->execute(['organisateur_id' => $organisateur_id]);
             $result = $query->fetch();
-            return $result['count'];
+            return (int)$result['count'];
         } catch (Exception $e) {
             error_log("CountEventsByOrganisateur error: " . $e->getMessage());
             return 0;
@@ -233,22 +451,34 @@ class EvenementController {
      */
     public function updateEvenement($event, $id) {
         try {
-            if (!$event->isValid()) {
-                $errors = $event->getErrors();
+            $data = [
+                'titre' => $event->getTitre(),
+                'description' => $event->getDescription(),
+                'date_event' => $event->getDate(),
+                'lieu' => $event->getLieu(),
+                'type' => $event->getType(),
+                'organisateur_id' => $event->getOrganisateurId()
+            ];
+            
+            $errors = $this->validateEvenementData($data);
+            if (!empty($errors)) {
                 throw new Exception(implode(', ', $errors));
             }
 
             $id = filter_var($id, FILTER_VALIDATE_INT);
-            if (!$id) {
+            if (!$id || $id <= 0) {
                 throw new Exception("ID invalide");
             }
 
-            // Vérifier si l'événement existe
             $checkSql = "SELECT id FROM evenement WHERE id = :id";
             $checkQuery = $this->db->prepare($checkSql);
             $checkQuery->execute(['id' => $id]);
             if (!$checkQuery->fetch()) {
                 throw new Exception("Événement non trouvé");
+            }
+            
+            if (!$this->organisateurExists($event->getOrganisateurId())) {
+                throw new Exception("L'organisateur sélectionné n'existe pas");
             }
 
             $sql = "UPDATE evenement SET 
@@ -263,10 +493,10 @@ class EvenementController {
             $query = $this->db->prepare($sql);
             $result = $query->execute([
                 'id' => $id,
-                'titre' => $event->getTitre(),
-                'description' => $event->getDescription(),
+                'titre' => htmlspecialchars($event->getTitre(), ENT_QUOTES),
+                'description' => htmlspecialchars($event->getDescription(), ENT_QUOTES),
                 'date_event' => $event->getDate(),
-                'lieu' => $event->getLieu(),
+                'lieu' => htmlspecialchars($event->getLieu(), ENT_QUOTES),
                 'type' => $event->getType(),
                 'organisateur_id' => $event->getOrganisateurId()
             ]);
@@ -287,11 +517,10 @@ class EvenementController {
     public function deleteEvenement($id) {
         try {
             $id = filter_var($id, FILTER_VALIDATE_INT);
-            if (!$id) {
+            if (!$id || $id <= 0) {
                 throw new Exception("ID invalide");
             }
 
-            // Vérifier si l'événement existe
             $checkSql = "SELECT id, titre FROM evenement WHERE id = :id";
             $checkQuery = $this->db->prepare($checkSql);
             $checkQuery->execute(['id' => $id]);
@@ -305,12 +534,37 @@ class EvenementController {
             $result = $query->execute(['id' => $id]);
 
             if ($result) {
-                return ['success' => true, 'message' => 'Événement "' . $event['titre'] . '" supprimé avec succès'];
+                return ['success' => true, 'message' => 'Événement "' . htmlspecialchars($event['titre']) . '" supprimé avec succès'];
             }
             return ['success' => false, 'message' => 'Erreur lors de la suppression'];
         } catch (Exception $e) {
             error_log("DeleteEvenement error: " . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * READ - Obtenir les N prochains événements
+     */
+    public function getNextEvents($limit = 5) {
+        try {
+            $limit = filter_var($limit, FILTER_VALIDATE_INT);
+            if ($limit === false || $limit <= 0) $limit = 5;
+            if ($limit > 50) $limit = 50;
+            
+            $sql = "SELECT e.*, o.nom as organisateur_nom 
+                    FROM evenement e 
+                    LEFT JOIN organisateur o ON e.organisateur_id = o.id 
+                    WHERE e.date_event >= CURDATE() 
+                    ORDER BY e.date_event ASC 
+                    LIMIT :limit";
+            $query = $this->db->prepare($sql);
+            $query->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $query->execute();
+            return $query->fetchAll();
+        } catch (Exception $e) {
+            error_log("GetNextEvents error: " . $e->getMessage());
+            return [];
         }
     }
 
@@ -321,25 +575,20 @@ class EvenementController {
         try {
             $stats = [];
             
-            // Total des événements
             $sql = "SELECT COUNT(*) as total FROM evenement";
             $result = $this->db->query($sql);
-            $stats['total'] = $result->fetch()['total'];
+            $stats['total'] = (int)$result->fetch()['total'];
             
-            // Événements à venir
             $sql = "SELECT COUNT(*) as upcoming FROM evenement WHERE date_event >= CURDATE()";
             $result = $this->db->query($sql);
-            $stats['upcoming'] = $result->fetch()['upcoming'];
+            $stats['upcoming'] = (int)$result->fetch()['upcoming'];
             
-            // Événements passés
             $stats['past'] = $stats['total'] - $stats['upcoming'];
             
-            // Événements par type
             $sql = "SELECT type, COUNT(*) as count FROM evenement GROUP BY type";
             $result = $this->db->query($sql);
             $stats['byType'] = $result->fetchAll();
             
-            // Prochains événements (5 prochains)
             $sql = "SELECT e.*, o.nom as organisateur_nom 
                     FROM evenement e 
                     LEFT JOIN organisateur o ON e.organisateur_id = o.id 
@@ -348,10 +597,9 @@ class EvenementController {
             $result = $this->db->query($sql);
             $stats['nextEvents'] = $result->fetchAll();
             
-            // Nombre d'organisateurs distincts
             $sql = "SELECT COUNT(DISTINCT organisateur_id) as organisateurs FROM evenement";
             $result = $this->db->query($sql);
-            $stats['organisateurs'] = $result->fetch()['organisateurs'];
+            $stats['organisateurs'] = (int)$result->fetch()['organisateurs'];
             
             return $stats;
         } catch (Exception $e) {
@@ -387,7 +635,7 @@ class EvenementController {
     public function organisateurExists($organisateur_id) {
         try {
             $organisateur_id = filter_var($organisateur_id, FILTER_VALIDATE_INT);
-            if (!$organisateur_id) {
+            if (!$organisateur_id || $organisateur_id <= 0) {
                 return false;
             }
             
@@ -426,7 +674,7 @@ class EvenementController {
             $sql = "SELECT e.*, o.nom as organisateur_nom 
                     FROM evenement e 
                     LEFT JOIN organisateur o ON e.organisateur_id = o.id 
-                    ORDER BY e.created_at DESC LIMIT 1";
+                    ORDER BY e.id DESC LIMIT 1";
             $result = $this->db->query($sql);
             return $result->fetch();
         } catch (Exception $e) {

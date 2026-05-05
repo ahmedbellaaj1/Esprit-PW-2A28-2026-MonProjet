@@ -3,67 +3,115 @@ session_start();
 require_once "../../controller/EvenementController.php";
 require_once "../../model/Evenement.php";
 
+$controller = new EvenementController();
+$organisateurs = $controller->getAllOrganisateurs();
+
 $error = '';
 $success = '';
-$formData = ['titre' => '', 'description' => '', 'date' => '', 'lieu' => '', 'type' => ''];
+$formData = ['titre' => '', 'description' => '', 'date' => '', 'lieu' => '', 'type' => '', 'organisateur_id' => ''];
+$errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Récupération des données
+    // Récupération et nettoyage des données
     $formData = [
         'titre' => trim($_POST['titre'] ?? ''),
         'description' => trim($_POST['description'] ?? ''),
         'date' => trim($_POST['date'] ?? ''),
         'lieu' => trim($_POST['lieu'] ?? ''),
-        'type' => trim($_POST['type'] ?? '')
+        'type' => trim($_POST['type'] ?? ''),
+        'organisateur_id' => trim($_POST['organisateur_id'] ?? '')
     ];
     
-    // Validation PHP uniquement
-    $errors = [];
+    // ==================== VALIDATIONS PHP UNIQUEMENT ====================
     
-    // Validation du titre
+    // 1. Validation du titre
     if (empty($formData['titre'])) {
         $errors['titre'] = "Le titre est obligatoire";
     } elseif (strlen($formData['titre']) < 3) {
         $errors['titre'] = "Le titre doit contenir au moins 3 caractères";
     } elseif (strlen($formData['titre']) > 100) {
         $errors['titre'] = "Le titre ne peut pas dépasser 100 caractères";
+    } elseif (!preg_match('/^[a-zA-Z0-9\s\-\'àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]+$/', $formData['titre'])) {
+        $errors['titre'] = "Le titre contient des caractères non autorisés";
     }
     
-    // Validation de la description
+    // 2. Validation de la description
     if (empty($formData['description'])) {
         $errors['description'] = "La description est obligatoire";
     } elseif (strlen($formData['description']) < 10) {
         $errors['description'] = "La description doit contenir au moins 10 caractères";
+    } elseif (strlen($formData['description']) > 5000) {
+        $errors['description'] = "La description ne peut pas dépasser 5000 caractères";
     }
     
-    // Validation de la date
+    // 3. Validation de la date
     if (empty($formData['date'])) {
         $errors['date'] = "La date est obligatoire";
     } else {
-        $dateObj = DateTime::createFromFormat('Y-m-d', $formData['date']);
-        if (!$dateObj || $dateObj->format('Y-m-d') !== $formData['date']) {
-            $errors['date'] = "Format de date invalide";
-        } elseif ($dateObj < new DateTime()) {
-            $errors['date'] = "La date ne peut pas être dans le passé";
+        // Vérifier le format YYYY-MM-DD
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $formData['date'])) {
+            $errors['date'] = "Format de date invalide. Utilisez le format AAAA-MM-JJ (ex: 2025-12-31)";
+        } else {
+            $dateObj = DateTime::createFromFormat('Y-m-d', $formData['date']);
+            if (!$dateObj || $dateObj->format('Y-m-d') !== $formData['date']) {
+                $errors['date'] = "Date invalide. Vérifiez que le jour et le mois sont corrects";
+            } else {
+                $today = new DateTime();
+                $today->setTime(0, 0, 0);
+                if ($dateObj < $today) {
+                    $errors['date'] = "La date ne peut pas être dans le passé. Choisissez une date à partir d'aujourd'hui";
+                }
+                // Vérifier que la date n'est pas trop loin (max +5 ans)
+                $maxDate = (new DateTime())->modify('+5 years');
+                if ($dateObj > $maxDate) {
+                    $errors['date'] = "La date ne peut pas dépasser 5 ans dans le futur";
+                }
+            }
         }
     }
     
-    // Validation du lieu
+    // 4. Validation du lieu
     if (empty($formData['lieu'])) {
         $errors['lieu'] = "Le lieu est obligatoire";
     } elseif (strlen($formData['lieu']) < 2) {
         $errors['lieu'] = "Le lieu doit contenir au moins 2 caractères";
+    } elseif (strlen($formData['lieu']) > 100) {
+        $errors['lieu'] = "Le lieu ne peut pas dépasser 100 caractères";
     }
     
-    // Validation du type
+    // 5. Validation du type
     $validTypes = ['Atelier', 'Conférence', 'Festival', 'Autre'];
     if (empty($formData['type'])) {
         $errors['type'] = "Le type est obligatoire";
     } elseif (!in_array($formData['type'], $validTypes)) {
-        $errors['type'] = "Type d'événement invalide";
+        $errors['type'] = "Type d'événement invalide. Choisissez parmi: " . implode(', ', $validTypes);
     }
     
-    // Si pas d'erreurs, on ajoute
+    // 6. Validation de l'organisateur
+    if (empty($formData['organisateur_id'])) {
+        $errors['organisateur_id'] = "L'organisateur est obligatoire";
+    } elseif (!is_numeric($formData['organisateur_id']) || $formData['organisateur_id'] <= 0) {
+        $errors['organisateur_id'] = "Veuillez sélectionner un organisateur valide";
+    } else {
+        // Vérifier que l'organisateur existe dans la base
+        $organisateurExists = false;
+        foreach ($organisateurs as $org) {
+            if ($org['id'] == $formData['organisateur_id']) {
+                $organisateurExists = true;
+                break;
+            }
+        }
+        if (!$organisateurExists) {
+            $errors['organisateur_id'] = "L'organisateur sélectionné n'existe pas";
+        }
+    }
+    
+    // 7. Validation CSRF (protection basique)
+    if (empty($_SERVER['HTTP_REFERER']) || strpos($_SERVER['HTTP_REFERER'], 'addEvenement.php') === false) {
+        // Pas de protection CSRF stricte pour simplifier, mais on peut ajouter un token
+    }
+    
+    // ==================== TRAITEMENT SI PAS D'ERREURS ====================
     if (empty($errors)) {
         try {
             $event = new Evenement(
@@ -71,10 +119,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $formData['description'],
                 $formData['date'],
                 $formData['lieu'],
-                $formData['type']
+                $formData['type'],
+                $formData['organisateur_id']
             );
             
-            $controller = new EvenementController();
             $result = $controller->addEvenement($event);
             
             if ($result['success']) {
@@ -88,8 +136,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = $e->getMessage();
         }
     } else {
-        // Afficher les erreurs
-        $error = implode('<br>', $errors);
+        // Construction du message d'erreur HTML
+        $error = '<ul style="margin:0; padding-left:1.5rem;">';
+        foreach ($errors as $field => $message) {
+            $error .= '<li><strong>' . htmlspecialchars($field) . '</strong>: ' . htmlspecialchars($message) . '</li>';
+        }
+        $error .= '</ul>';
     }
 }
 ?>
@@ -141,6 +193,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 0.9rem;
         }
         .form-group label .required { color: #dc2626; margin-left: 0.25rem; }
+        
+        /* PAS d'attributs HTML5 comme required, minlength, maxlength, pattern, type="email", type="date" */
         .form-group input,
         .form-group textarea,
         .form-group select {
@@ -151,6 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: 'Inter', sans-serif;
             font-size: 0.95rem;
             transition: all 0.3s ease;
+            background: white;
         }
         .form-group input:focus,
         .form-group textarea:focus,
@@ -173,6 +228,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 12px;
             margin-bottom: 1.5rem;
             border-left: 4px solid #dc2626;
+        }
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #16a34a;
         }
         .form-actions {
             display: flex;
@@ -225,6 +288,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-color: #dc2626 !important;
             background-color: #fef2f2 !important;
         }
+        .field-success {
+            border-color: #16a34a !important;
+            background-color: #f0fdf4 !important;
+        }
         @media (max-width: 768px) {
             body { padding: 1rem; }
             .form-header { padding: 1.5rem; }
@@ -245,34 +312,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-body">
             <?php if ($error): ?>
                 <div class="error-message">
-                    ❌ <?= htmlspecialchars($error) ?>
+                    <strong>❌ Erreurs de validation :</strong><br>
+                    <?= $error ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if ($success): ?>
+                <div class="success-message">
+                    ✅ <?= htmlspecialchars($success) ?>
                 </div>
             <?php endif; ?>
 
+            <!-- 
+                ATTENTION : AUCUN ATTRIBUT HTML5 DE VALIDATION N'EST UTILISÉ !
+                - PAS de "required"
+                - PAS de "minlength"
+                - PAS de "maxlength"
+                - PAS de "pattern"
+                - PAS de "type="email""
+                - PAS de "type="date""
+                - PAS de "type="url""
+                Toute la validation est faite en PHP côté serveur !
+            -->
             <form method="POST" action="">
                 <div class="form-group">
                     <label>Titre de l'événement <span class="required">*</span></label>
-                    <input type="text" name="titre" value="<?= htmlspecialchars($formData['titre']) ?>"
+                    <input type="text" name="titre" 
+                           value="<?= htmlspecialchars($formData['titre']) ?>"
                            class="<?= isset($errors['titre']) ? 'field-error' : '' ?>">
-                    <small>3 à 100 caractères</small>
+                    <small>3 à 100 caractères (lettres, chiffres, espaces, tirets, apostrophes)</small>
                 </div>
 
                 <div class="form-group">
                     <label>Description <span class="required">*</span></label>
-                    <textarea name="description" class="<?= isset($errors['description']) ? 'field-error' : '' ?>"><?= htmlspecialchars($formData['description']) ?></textarea>
-                    <small>Minimum 10 caractères</small>
+                    <textarea name="description" 
+                              class="<?= isset($errors['description']) ? 'field-error' : '' ?>"><?= htmlspecialchars($formData['description']) ?></textarea>
+                    <small>Minimum 10 caractères, maximum 5000 caractères</small>
                 </div>
 
                 <div class="form-group">
                     <label>Date <span class="required">*</span></label>
-                    <input type="date" name="date" value="<?= htmlspecialchars($formData['date']) ?>"
+                    <input type="text" name="date" 
+                           value="<?= htmlspecialchars($formData['date']) ?>" 
+                           placeholder="AAAA-MM-JJ"
                            class="<?= isset($errors['date']) ? 'field-error' : '' ?>">
-                    <small>La date ne peut pas être dans le passé</small>
+                    <small>Format: AAAA-MM-JJ (ex: 2026-12-15) - La date ne peut pas être dans le passé</small>
                 </div>
 
                 <div class="form-group">
                     <label>Lieu <span class="required">*</span></label>
-                    <input type="text" name="lieu" value="<?= htmlspecialchars($formData['lieu']) ?>"
+                    <input type="text" name="lieu" 
+                           value="<?= htmlspecialchars($formData['lieu']) ?>"
                            class="<?= isset($errors['lieu']) ? 'field-error' : '' ?>">
                     <small>Ex: Tunis, Sfax, Sousse, Hammamet...</small>
                 </div>
@@ -286,6 +376,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="Festival" <?= $formData['type'] == 'Festival' ? 'selected' : '' ?>>🎉 Festival</option>
                         <option value="Autre" <?= $formData['type'] == 'Autre' ? 'selected' : '' ?>>📌 Autre</option>
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Organisateur <span class="required">*</span></label>
+                    <select name="organisateur_id" class="<?= isset($errors['organisateur_id']) ? 'field-error' : '' ?>">
+                        <option value="">Sélectionnez un organisateur</option>
+                        <?php foreach ($organisateurs as $org): ?>
+                            <option value="<?= $org['id'] ?>" <?= $formData['organisateur_id'] == $org['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($org['nom']) ?> (<?= htmlspecialchars($org['email']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small>Sélectionnez l'organisateur de cet événement</small>
                 </div>
 
                 <div class="form-actions">

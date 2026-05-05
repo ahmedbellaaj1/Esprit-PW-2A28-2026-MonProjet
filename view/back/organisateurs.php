@@ -2,15 +2,33 @@
 session_start();
 require_once "../../controller/OrganisateurController.php";
 
+// ==================== VALIDATIONS PHP UNIQUEMENT ====================
+
 $controller = new OrganisateurController();
 $organisateurs = $controller->listOrganisateurs();
 $totalOrganisateurs = $controller->getStats();
 
+// Validation et nettoyage du message de session
 $message = '';
-if (isset($_SESSION['message'])) {
-    $message = $_SESSION['message'];
+if (isset($_SESSION['message']) && !empty($_SESSION['message'])) {
+    $message = trim(htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8'));
     unset($_SESSION['message']);
 }
+
+// Validation et comptage des organisateurs
+$organisateursCount = is_array($organisateurs) ? count($organisateurs) : 0;
+$totalEvents = is_numeric($totalOrganisateurs) ? (int)$totalOrganisateurs : 0;
+
+// Calcul des contacts (nombre d'emails uniques)
+$uniqueEmails = [];
+if (is_array($organisateurs)) {
+    foreach ($organisateurs as $org) {
+        if (isset($org['email']) && !empty($org['email'])) {
+            $uniqueEmails[$org['email']] = true;
+        }
+    }
+}
+$contactsCount = count($uniqueEmails);
 ?>
 
 <!DOCTYPE html>
@@ -223,6 +241,29 @@ if (isset($_SESSION['message'])) {
             transform: scale(1.02);
         }
 
+        /* Bouton d'export */
+        .btn-export {
+            background: #14b8a6;
+            color: white;
+            padding: 0.875rem 1.75rem;
+            border-radius: 9999px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-export:hover {
+            background: #0f766e;
+            transform: scale(1.02);
+        }
+
+        /* PAS d'attributs HTML5 de validation sur la recherche */
         .search-box {
             padding: 0.75rem 1.25rem;
             border: 2px solid #e2e8f0;
@@ -274,6 +315,27 @@ if (isset($_SESSION['message'])) {
 
         tbody tr:hover {
             background: #f8fafc;
+        }
+
+        /* Badge pour le nombre d'événements */
+        .event-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .event-badge-low {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .event-badge-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .event-badge-high {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         /* Action Buttons */
@@ -332,20 +394,6 @@ if (isset($_SESSION['message'])) {
 
         .empty-state p {
             color: #64748b;
-        }
-
-        /* Badge Events */
-        .badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .badge-blue {
-            background: #dbeafe;
-            color: #1e40af;
         }
 
         /* Mobile Menu */
@@ -424,9 +472,17 @@ if (isset($_SESSION['message'])) {
                     <span class="icon">📊</span>
                     <span>Dashboard</span>
                 </a>
+                <a href="stats.php" class="sidebar-link">
+                    <span class="icon">📈</span>
+                    <span>Statistiques</span>
+                </a>
                 <a href="organisateurs.php" class="sidebar-link active">
                     <span class="icon">👥</span>
                     <span>Organisateurs</span>
+                </a>
+                <a href="addEvenement.php" class="sidebar-link">
+                    <span class="icon">➕</span>
+                    <span>Ajouter un événement</span>
                 </a>
                 <a href="../front/listEvenements.php" class="sidebar-link">
                     <span class="icon">🌍</span>
@@ -444,7 +500,7 @@ if (isset($_SESSION['message'])) {
 
             <?php if ($message): ?>
                 <div class="alert">
-                    ✅ <?= htmlspecialchars($message) ?>
+                    ✅ <?= $message ?>
                 </div>
             <?php endif; ?>
 
@@ -452,26 +508,33 @@ if (isset($_SESSION['message'])) {
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon">👥</div>
-                    <div class="stat-value"><?= count($organisateurs) ?></div>
+                    <div class="stat-value"><?= $organisateursCount ?></div>
                     <div class="stat-label">Total organisateurs</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">📧</div>
-                    <div class="stat-value"><?= count($organisateurs) ?></div>
+                    <div class="stat-value"><?= $contactsCount ?></div>
                     <div class="stat-label">Contacts</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">🎉</div>
-                    <div class="stat-value"><?= $totalOrganisateurs ?></div>
+                    <div class="stat-value"><?= $totalEvents ?></div>
                     <div class="stat-label">Événements organisés</div>
                 </div>
             </div>
 
-            <!-- Action Bar -->
+            <!-- Action Bar avec bouton d'export -->
             <div class="action-bar">
                 <a href="addOrganisateur.php" class="btn-add">
                     ➕ Ajouter un organisateur
                 </a>
+                
+                <!-- Bouton d'export CSV -->
+                <a href="../../controller/export_dispatcher.php?action=export_organisateurs_csv" class="btn-export">
+                    📥 Exporter CSV
+                </a>
+                
+                <!-- Champ de recherche sans attributs HTML5 de validation -->
                 <input type="text" id="searchInput" class="search-box" placeholder="🔍 Rechercher un organisateur...">
             </div>
 
@@ -485,44 +548,72 @@ if (isset($_SESSION['message'])) {
                             <th>Email</th>
                             <th>Téléphone</th>
                             <th>Site web</th>
+                            <th>Événements</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($organisateurs)): ?>
                             <tr>
-                                <td colspan="6" class="empty-state">
+                                <td colspan="7" class="empty-state">
                                     <div class="emoji">📭</div>
                                     <h3>Aucun organisateur</h3>
                                     <p>Cliquez sur "Ajouter un organisateur" pour commencer</p>
+                                    <a href="addOrganisateur.php" style="color: #0f766e; display: inline-block; margin-top: 0.5rem;">
+                                        ➕ Ajouter votre premier organisateur
+                                    </a>
                                 </td>
                             </tr>
                         <?php else: ?>
-                            <?php foreach($organisateurs as $org): ?>
-                                <tr>
-                                    <td><?= $org['id'] ?></td>
-                                    <td><strong><?= htmlspecialchars($org['nom']) ?></strong></td>
-                                    <td><?= htmlspecialchars($org['email']) ?></td>
-                                    <td><?= htmlspecialchars($org['telephone']) ?></td>
-                                    <td>
-                                        <?php if (!empty($org['site_web'])): ?>
-                                            <a href="<?= htmlspecialchars($org['site_web']) ?>" target="_blank" style="color: #0f766e;">
-                                                🌐 Visiter
-                                            </a>
-                                        <?php else: ?>
-                                            <span style="color: #94a3b8;">-</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="actions">
-                                        <a href="editOrganisateur.php?id=<?= $org['id'] ?>" class="btn-edit">
-                                            ✏️ Modifier
+                            <?php foreach($organisateurs as $org): 
+                                // Validation des données de l'organisateur
+                                $orgId = isset($org['id']) ? (int)$org['id'] : 0;
+                                $orgNom = isset($org['nom']) ? htmlspecialchars($org['nom'], ENT_QUOTES, 'UTF-8') : 'Sans nom';
+                                $orgEmail = isset($org['email']) ? htmlspecialchars($org['email'], ENT_QUOTES, 'UTF-8') : '';
+                                $orgTelephone = isset($org['telephone']) ? htmlspecialchars($org['telephone'], ENT_QUOTES, 'UTF-8') : '';
+                                $orgSiteWeb = isset($org['site_web']) && !empty($org['site_web']) 
+                                    ? htmlspecialchars($org['site_web'], ENT_QUOTES, 'UTF-8') 
+                                    : null;
+                                $orgEventCount = isset($org['event_count']) ? (int)$org['event_count'] : 0;
+                                
+                                // Classe CSS pour le badge d'événements
+                                if ($orgEventCount == 0) {
+                                    $eventBadgeClass = 'event-badge-low';
+                                } elseif ($orgEventCount <= 3) {
+                                    $eventBadgeClass = 'event-badge-medium';
+                                } else {
+                                    $eventBadgeClass = 'event-badge-high';
+                                }
+                            ?>
+                            <tr>
+                                <td><?= $orgId ?></td>
+                                <td><strong><?= $orgNom ?></strong></td>
+                                <td><?= $orgEmail ?></td>
+                                <td><?= $orgTelephone ?></td>
+                                <td>
+                                    <?php if ($orgSiteWeb): ?>
+                                        <a href="<?= $orgSiteWeb ?>" target="_blank" style="color: #0f766e; text-decoration: none;">
+                                            🌐 Visiter
                                         </a>
-                                        <a href="deleteOrganisateur.php?id=<?= $org['id'] ?>" class="btn-delete" 
-                                           onclick="return confirm('⚠️ Supprimer cet organisateur ?')">
-                                            🗑️ Supprimer
-                                        </a>
-                                    </td>
-                                </tr>
+                                    <?php else: ?>
+                                        <span style="color: #94a3b8;">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <span class="event-badge <?= $eventBadgeClass ?>">
+                                        <?= $orgEventCount ?>
+                                    </span>
+                                </td>
+                                <td class="actions">
+                                    <a href="editOrganisateur.php?id=<?= $orgId ?>" class="btn-edit">
+                                        ✏️ Modifier
+                                    </a>
+                                    <a href="deleteOrganisateur.php?id=<?= $orgId ?>" class="btn-delete" 
+                                       onclick="return confirm('⚠️ Supprimer cet organisateur ? Cette action est irréversible.')">
+                                        🗑️ Supprimer
+                                    </a>
+                                </td>
+                            </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
@@ -532,20 +623,28 @@ if (isset($_SESSION['message'])) {
     </div>
 
     <script>
+        // Fonction pour la sidebar mobile
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
         }
 
-        // Recherche en temps réel
-        document.getElementById('searchInput').addEventListener('keyup', function() {
-            let searchValue = this.value.toLowerCase();
-            let rows = document.querySelectorAll('#organisateursTable tbody tr');
-            
-            rows.forEach(row => {
-                let text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchValue) ? '' : 'none';
+        // Recherche en temps réel (JavaScript pur, pas de validation HTML5)
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                let searchValue = this.value.toLowerCase();
+                let rows = document.querySelectorAll('#organisateursTable tbody tr');
+                
+                rows.forEach(row => {
+                    // Vérifier si la ligne n'est pas la ligne "vide"
+                    if (row.querySelector('.empty-state')) {
+                        return;
+                    }
+                    let text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchValue) ? '' : 'none';
+                });
             });
-        });
+        }
 
         // Fermer sidebar sur clic externe (mobile)
         document.addEventListener('click', function(event) {

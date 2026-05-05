@@ -24,66 +24,94 @@ class Evenement {
         $this->organisateur_id = $organisateur_id;
     }
 
-    // ==================== SETTERS AVEC VALIDATION PHP ====================
+    // ==================== SETTERS AVEC VALIDATION PHP UNIQUEMENT ====================
     
     public function setId($id) {
-        $this->id = (int)$id;
+        $id = filter_var($id, FILTER_VALIDATE_INT);
+        if ($id === false || $id <= 0) {
+            throw new Exception("ID invalide");
+        }
+        $this->id = $id;
         return $this;
     }
 
     public function setTitre($titre) {
+        // Nettoyage et validation PHP
         $titre = trim($titre);
+        
         if (empty($titre)) {
             throw new Exception("Le titre est obligatoire");
         }
+        
         if (strlen($titre) < 3) {
             throw new Exception("Le titre doit contenir au moins 3 caractères");
         }
+        
         if (strlen($titre) > 100) {
             throw new Exception("Le titre ne peut pas dépasser 100 caractères");
         }
+        
+        // Validation des caractères autorisés (lettres, chiffres, espaces, tirets, apostrophes)
         if (!preg_match('/^[a-zA-Z0-9\s\-\'àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]+$/', $titre)) {
-            throw new Exception("Le titre contient des caractères non autorisés");
+            throw new Exception("Le titre contient des caractères non autorisés. Utilisez uniquement des lettres, chiffres, espaces, tirets et apostrophes");
         }
+        
+        // Protection contre les injections XSS
         $this->titre = htmlspecialchars($titre, ENT_QUOTES, 'UTF-8');
         return $this;
     }
 
     public function setDescription($description) {
+        // Nettoyage et validation PHP
         $description = trim($description);
+        
         if (empty($description)) {
             throw new Exception("La description est obligatoire");
         }
+        
         if (strlen($description) < 10) {
             throw new Exception("La description doit contenir au moins 10 caractères");
         }
+        
         if (strlen($description) > 5000) {
             throw new Exception("La description ne peut pas dépasser 5000 caractères");
         }
+        
+        // Protection contre les injections XSS
         $this->description = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
         return $this;
     }
 
     public function setDate($date) {
+        // Nettoyage et validation PHP
         $date = trim($date);
+        
         if (empty($date)) {
             throw new Exception("La date est obligatoire");
         }
         
         // Vérifier le format YYYY-MM-DD
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            throw new Exception("Format de date invalide. Utilisez le format AAAA-MM-JJ");
+            throw new Exception("Format de date invalide. Utilisez le format AAAA-MM-JJ (ex: 2025-12-31)");
         }
         
+        // Vérifier que la date est valide (ex: pas 2025-02-30)
         $dateObj = DateTime::createFromFormat('Y-m-d', $date);
         if (!$dateObj || $dateObj->format('Y-m-d') !== $date) {
-            throw new Exception("Date invalide");
+            throw new Exception("Date invalide. Vérifiez que le jour et le mois sont corrects");
         }
         
+        // Vérifier que la date n'est pas dans le passé
         $today = new DateTime();
         $today->setTime(0, 0, 0);
         if ($dateObj < $today) {
-            throw new Exception("La date ne peut pas être dans le passé");
+            throw new Exception("La date ne peut pas être dans le passé. Choisissez une date à partir d'aujourd'hui");
+        }
+        
+        // Vérifier que la date n'est pas trop loin (max +5 ans)
+        $maxDate = (new DateTime())->modify('+5 years');
+        if ($dateObj > $maxDate) {
+            throw new Exception("La date ne peut pas dépasser 5 ans dans le futur");
         }
         
         $this->date_event = $date;
@@ -91,38 +119,52 @@ class Evenement {
     }
 
     public function setLieu($lieu) {
+        // Nettoyage et validation PHP
         $lieu = trim($lieu);
+        
         if (empty($lieu)) {
             throw new Exception("Le lieu est obligatoire");
         }
+        
         if (strlen($lieu) < 2) {
             throw new Exception("Le lieu doit contenir au moins 2 caractères");
         }
+        
         if (strlen($lieu) > 100) {
             throw new Exception("Le lieu ne peut pas dépasser 100 caractères");
         }
+        
+        // Protection contre les injections XSS
         $this->lieu = htmlspecialchars($lieu, ENT_QUOTES, 'UTF-8');
         return $this;
     }
 
     public function setType($type) {
+        // Nettoyage et validation PHP
         $type = trim($type);
+        
         $validTypes = ['Atelier', 'Conférence', 'Festival', 'Autre'];
+        
         if (empty($type)) {
             throw new Exception("Le type est obligatoire");
         }
+        
         if (!in_array($type, $validTypes)) {
             throw new Exception("Type d'événement invalide. Choisissez parmi: " . implode(', ', $validTypes));
         }
+        
         $this->type = $type;
         return $this;
     }
 
     public function setOrganisateurId($organisateur_id) {
-        $organisateur_id = (int)$organisateur_id;
-        if ($organisateur_id <= 0) {
-            throw new Exception("L'organisateur est obligatoire");
+        // Validation PHP de l'ID
+        $organisateur_id = filter_var($organisateur_id, FILTER_VALIDATE_INT);
+        
+        if ($organisateur_id === false || $organisateur_id <= 0) {
+            throw new Exception("L'organisateur est obligatoire. Veuillez sélectionner un organisateur valide");
         }
+        
         $this->organisateur_id = $organisateur_id;
         return $this;
     }
@@ -139,21 +181,21 @@ class Evenement {
 
     // Données de jointure
     public function setOrganisateurNom($nom) {
-        $this->organisateur_nom = $nom;
+        $this->organisateur_nom = htmlspecialchars($nom, ENT_QUOTES, 'UTF-8');
         return $this;
     }
 
     public function setOrganisateurEmail($email) {
-        $this->organisateur_email = $email;
+        $this->organisateur_email = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
         return $this;
     }
 
     public function setOrganisateurTelephone($telephone) {
-        $this->organisateur_telephone = $telephone;
+        $this->organisateur_telephone = htmlspecialchars($telephone, ENT_QUOTES, 'UTF-8');
         return $this;
     }
 
-    // ==================== GETTERS ====================
+    // ==================== GETTERS AVEC SÉCURISATION ====================
     
     public function getId() { 
         return $this->id; 
@@ -203,10 +245,11 @@ class Evenement {
         return $this->organisateur_telephone; 
     }
 
-    // ==================== MÉTHODES UTILITAIRES ====================
+    // ==================== MÉTHODES DE VALIDATION ====================
     
     /**
-     * Validation complète de l'événement
+     * Validation complète de l'événement (tous les champs)
+     * @return bool
      */
     public function isValid() {
         try {
@@ -223,7 +266,8 @@ class Evenement {
     }
 
     /**
-     * Récupérer tous les messages d'erreur
+     * Récupérer tous les messages d'erreur sous forme de tableau
+     * @return array
      */
     public function getErrors() {
         $errors = [];
@@ -237,7 +281,66 @@ class Evenement {
     }
 
     /**
-     * Formater la date en français
+     * Récupérer les erreurs sous forme de chaîne de caractères
+     * @return string
+     */
+    public function getErrorsString() {
+        $errors = $this->getErrors();
+        if (empty($errors)) {
+            return '';
+        }
+        return implode(', ', $errors);
+    }
+
+    /**
+     * Vérifier si un champ spécifique est valide
+     * @param string $field
+     * @return bool
+     */
+    public function isFieldValid($field) {
+        try {
+            switch ($field) {
+                case 'titre': $this->setTitre($this->titre); break;
+                case 'description': $this->setDescription($this->description); break;
+                case 'date': $this->setDate($this->date_event); break;
+                case 'lieu': $this->setLieu($this->lieu); break;
+                case 'type': $this->setType($this->type); break;
+                case 'organisateur_id': $this->setOrganisateurId($this->organisateur_id); break;
+                default: return false;
+            }
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Obtenir l'erreur d'un champ spécifique
+     * @param string $field
+     * @return string|null
+     */
+    public function getFieldError($field) {
+        try {
+            switch ($field) {
+                case 'titre': $this->setTitre($this->titre); break;
+                case 'description': $this->setDescription($this->description); break;
+                case 'date': $this->setDate($this->date_event); break;
+                case 'lieu': $this->setLieu($this->lieu); break;
+                case 'type': $this->setType($this->type); break;
+                case 'organisateur_id': $this->setOrganisateurId($this->organisateur_id); break;
+                default: return null;
+            }
+            return null;
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
+    // ==================== MÉTHODES DE FORMATAGE ====================
+    
+    /**
+     * Formater la date en français (dd/mm/yyyy)
+     * @return string
      */
     public function getFormattedDate() {
         if (empty($this->date_event)) {
@@ -248,7 +351,8 @@ class Evenement {
     }
 
     /**
-     * Formater la date avec le jour de la semaine
+     * Formater la date avec le jour de la semaine (Lundi 15 décembre 2025)
+     * @return string
      */
     public function getFormattedDateLong() {
         if (empty($this->date_event)) {
@@ -263,6 +367,7 @@ class Evenement {
 
     /**
      * Obtenir le label du type avec icône
+     * @return string
      */
     public function getTypeLabel() {
         $types = [
@@ -275,7 +380,8 @@ class Evenement {
     }
 
     /**
-     * Obtenir la classe CSS du type
+     * Obtenir la classe CSS du type pour le styling
+     * @return string
      */
     public function getTypeClass() {
         $classes = [
@@ -289,6 +395,7 @@ class Evenement {
 
     /**
      * Obtenir l'icône du lieu
+     * @return string
      */
     public function getLieuIcon() {
         $lieux = [
@@ -302,8 +409,11 @@ class Evenement {
         return $lieux[$this->lieu] ?? '📍';
     }
 
+    // ==================== MÉTHODES DE STATUT ====================
+    
     /**
      * Vérifier si l'événement est à venir
+     * @return bool
      */
     public function isUpcoming() {
         if (empty($this->date_event)) {
@@ -317,6 +427,7 @@ class Evenement {
 
     /**
      * Vérifier si l'événement est passé
+     * @return bool
      */
     public function isPast() {
         if (empty($this->date_event)) {
@@ -329,10 +440,27 @@ class Evenement {
     }
 
     /**
-     * Obtenir le statut de l'événement
+     * Vérifier si l'événement est aujourd'hui
+     * @return bool
+     */
+    public function isToday() {
+        if (empty($this->date_event)) {
+            return false;
+        }
+        $today = new DateTime();
+        $today->setTime(0, 0, 0);
+        $eventDate = new DateTime($this->date_event);
+        return $eventDate == $today;
+    }
+
+    /**
+     * Obtenir le statut de l'événement avec label, classe et icône
+     * @return array
      */
     public function getStatus() {
-        if ($this->isUpcoming()) {
+        if ($this->isToday()) {
+            return ['label' => 'Aujourd\'hui', 'class' => 'status-today', 'icon' => '🔴'];
+        } elseif ($this->isUpcoming()) {
             return ['label' => 'À venir', 'class' => 'status-upcoming', 'icon' => '📅'];
         } else {
             return ['label' => 'Passé', 'class' => 'status-past', 'icon' => '✅'];
@@ -340,7 +468,43 @@ class Evenement {
     }
 
     /**
+     * Obtenir le nombre de jours restants avant l'événement
+     * @return int|null
+     */
+    public function getDaysRemaining() {
+        if (empty($this->date_event) || $this->isPast()) {
+            return null;
+        }
+        $today = new DateTime();
+        $today->setTime(0, 0, 0);
+        $eventDate = new DateTime($this->date_event);
+        $diff = $today->diff($eventDate);
+        return (int)$diff->days;
+    }
+
+    /**
+     * Obtenir le libellé des jours restants
+     * @return string
+     */
+    public function getDaysRemainingLabel() {
+        $days = $this->getDaysRemaining();
+        if ($days === null) {
+            return '';
+        }
+        if ($days == 0) {
+            return "Aujourd'hui !";
+        } elseif ($days == 1) {
+            return "Demain !";
+        } else {
+            return "Dans $days jours";
+        }
+    }
+
+    // ==================== MÉTHODES DE CONVERSION ====================
+    
+    /**
      * Convertir l'objet en tableau pour la base de données
+     * @return array
      */
     public function toArray() {
         return [
@@ -356,6 +520,8 @@ class Evenement {
 
     /**
      * Créer un objet Evenement à partir d'un tableau (résultat PDO)
+     * @param array $data
+     * @return Evenement
      */
     public static function fromArray($data) {
         $event = new Evenement(
@@ -387,6 +553,22 @@ class Evenement {
         }
         
         return $event;
+    }
+
+    /**
+     * Créer un tableau d'erreurs pour l'affichage dans les formulaires
+     * @return array
+     */
+    public function getValidationErrors() {
+        return $this->getErrors();
+    }
+
+    /**
+     * Vérifier si l'objet a des erreurs de validation
+     * @return bool
+     */
+    public function hasErrors() {
+        return !empty($this->getErrors());
     }
 }
 ?>
