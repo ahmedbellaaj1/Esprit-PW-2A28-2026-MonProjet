@@ -122,7 +122,7 @@ try {
         }
 
         setFlash('success', 'Un email de confirmation a ete envoye a ' . htmlspecialchars($email) . '. Veuillez confirmer votre email pour activer votre compte.');
-        redirect('/projetwebnova/View/auth.php');
+        redirectWithFormState('register-panel', [], []);
     }
 
     if ($action === 'login') {

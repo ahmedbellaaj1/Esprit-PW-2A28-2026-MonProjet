@@ -107,11 +107,7 @@ if (!empty($currentUser->getPhoto())) {
                     </div>
 
                     <div class="form-group">
-                        <label for="profile-password">Nouveau mot de passe (optionnel)</label>
-                        <input id="profile-password" name="mot_de_passe" type="password" placeholder="Laisser vide pour conserver l actuel">
-                    </div>
 
-                    <div class="form-group">
                         <label for="profile-photo">Nouvelle photo (optionnel)</label>
                         <input id="profile-photo" name="photo" type="file" accept="image/*">
 

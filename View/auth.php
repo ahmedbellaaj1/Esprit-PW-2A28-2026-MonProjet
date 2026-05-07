@@ -176,6 +176,7 @@ function field_error(array $errors, string $name): string
                                 'response_type' => 'code',
                                 'scope' => 'email profile',
                                 'access_type' => 'offline',
+                                'prompt' => 'select_account',
                             ]);
                             
                             error_log('[Google Auth] Full URL: ' . $googleAuthUrl);
@@ -582,8 +583,28 @@ function field_error(array $errors, string $name): string
                 passwordInput.addEventListener('input', updatePasswordErrors);
             }
             
+            // Refresh CAPTCHA automatically after registration attempt
+            function autoRefreshCaptcha() {
+                var activePanel = document.querySelector('.auth-panel.active');
+                var isRegisterPanel = activePanel && activePanel.id === 'register-panel';
+                
+                if (isRegisterPanel) {
+                    // Simulate click on refresh button to get new CAPTCHA
+                    var refreshBtn = document.getElementById('captcha-refresh');
+                    if (refreshBtn) {
+                        // Auto-refresh CAPTCHA for next attempt
+                        setTimeout(function() {
+                            refreshBtn.click();
+                        }, 500);
+                    }
+                }
+            }
+            
             // Initialiser les listeners CAPTCHA
             attachCaptchaEventListeners();
+            
+            // Auto refresh CAPTCHA when registration panel is active
+            autoRefreshCaptcha();
 
             activate(<?= json_encode($activeTab) ?>);
         })();
