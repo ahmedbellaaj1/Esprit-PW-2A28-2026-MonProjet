@@ -20,6 +20,12 @@ require_once __DIR__ . '/../includes/bootstrap.php';
             margin-bottom: 2rem;
             border-bottom: 2px solid #e5e7eb;
             padding-bottom: 0;
+            flex-wrap: wrap;
+        }
+
+        .cart-tabs-buttons {
+            display: flex;
+            gap: 0.5rem;
         }
 
         .tab-button {
@@ -68,10 +74,12 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 
         /* Styles pour l'historique */
         .historique-form-section {
-            background: #f3f4f6;
+            background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 100%);
             padding: 1.5rem;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .historique-stats {
@@ -107,15 +115,24 @@ require_once __DIR__ . '/../includes/bootstrap.php';
         }
 
         .order-card {
-            transition: box-shadow 0.3s ease;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            background: white;
         }
 
         .order-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 16px rgba(22, 163, 74, 0.1);
+            transform: translateY(-2px);
         }
 
         @media (max-width: 768px) {
             .cart-tabs {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .cart-tabs-buttons {
+                width: 100%;
                 flex-direction: column;
                 gap: 0;
             }
@@ -146,8 +163,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
         <li><a href="#">Recettes</a></li>
         <li><a href="index.php">Produits</a></li>
         <li><a href="#">Dons</a></li>
-        <li><a href="#">Magasins</a></li>
-        <li><a href="order-history.php" title="Voir mon historique d'achats">📋 Historique</a></li>
+        <li><a href="#">Événements</a></li>
     </ul>
     <div class="navbar-right">
         <a class="primary-btn nav-quick-btn" href="../back-office/dashboard.php">Dashboard Admin</a>
@@ -162,12 +178,14 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 <div class="main-container" style="padding-top:1.5rem;">
     <!-- Onglets -->
     <div class="cart-tabs">
-        <button id="tabPanier" class="tab-button active" onclick="switchTab('panier')">
-            🛒 Mon Panier
-        </button>
-        <button id="tabHistorique" class="tab-button" onclick="switchTab('historique')">
-         <a href="order-history.php" style="display:inline-block;margin-top:.75rem;color:#16a34a;font-size:.9rem;">📋 Voir l'historique</a>
-        </button>
+        <div class="cart-tabs-buttons">
+            <button id="tabPanier" class="tab-button active" onclick="switchTab('panier')">
+                🛒 Mon Panier
+            </button>
+            <button id="tabHistorique" class="tab-button active" onclick="switchTab('historique')">
+             <a href="order-history.php" style="color:#16a34a;font-size:.9rem;">📋 Voir l'historique</a>
+            </button>
+        </div>
     </div>
 
     <!-- Contenu du Panier -->

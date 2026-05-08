@@ -14,7 +14,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -28,7 +28,7 @@ body {
 }
 
 .navbar a {
-    color: #667eea;
+    color: #16a34a;
     text-decoration: none;
     font-weight: bold;
 }
@@ -84,7 +84,7 @@ input, select, textarea {
 
 input:focus, select:focus, textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #16a34a;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -130,12 +130,12 @@ input:focus, select:focus, textarea:focus {
 }
 
 .payment-method:hover {
-    border-color: #667eea;
+    border-color: #16a34a;
     background: #f9f9f9;
 }
 
 .payment-method.active {
-    border-color: #667eea;
+    border-color: #16a34a;
     background: #f0f4ff;
 }
 
@@ -169,11 +169,11 @@ input:focus, select:focus, textarea:focus {
 
 .security-badge {
     background: #f0f4ff;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #16a34a;
     padding: 15px;
     border-radius: 8px;
     margin: 20px 0;
-    color: #667eea;
+    color: #16a34a;
     font-size: 0.9em;
 }
 
@@ -184,7 +184,7 @@ input:focus, select:focus, textarea:focus {
 button {
     width: 100%;
     padding: 15px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
     color: white;
     border: none;
     border-radius: 8px;
@@ -243,7 +243,7 @@ button:disabled {
 
 .summary-item-price {
     font-weight: 600;
-    color: #667eea;
+    color: #16a34a;
     min-width: 80px;
     text-align: right;
 }
@@ -254,7 +254,7 @@ button:disabled {
     align-items: center;
     padding: 20px 0;
     margin-top: 20px;
-    border-top: 2px solid #667eea;
+    border-top: 2px solid #16a34a;
     font-size: 1.3em;
     font-weight: bold;
     color: #333;
@@ -267,7 +267,7 @@ button:disabled {
 .loading {
     display: none;
     text-align: center;
-    color: #667eea;
+    color: #16a34a;
 }
 
 .loading.active {
@@ -276,7 +276,7 @@ button:disabled {
 
 .spinner {
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #667eea;
+    border-top: 4px solid #16a34a;
     border-radius: 50%;
     width: 40px;
     height: 40px;

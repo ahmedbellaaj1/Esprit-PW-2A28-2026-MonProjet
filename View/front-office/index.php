@@ -43,9 +43,7 @@ $categories = $controller->categories();
         <li><a href="#">Recettes</a></li>
         <li><a href="index.php" class="active">Produits</a></li>
         <li><a href="#">Dons</a></li>
-        <li><a href="#">Magasins</a></li>
-        <li><a href="order-history.php" title="Voir mon historique d'achats">📋 Historique</a></li>
-        <li><a href="barcode-scanner.php" title="Scanner un code-barres" style="color:#16a34a;font-weight:600;">📷 Scanner</a></li>
+        <li><a href="#">Événements</a></li>
     </ul>
     <div class="navbar-right">
         <a class="primary-btn nav-quick-btn" href="../back-office/dashboard.php">Dashboard Admin</a>
@@ -93,9 +91,15 @@ $categories = $controller->categories();
         </div>
     </div>
 
-    <div class="search-wrapper" style="margin-top: 2rem;">
-        <input type="text" id="searchInput" value="<?= h($q) ?>" placeholder="🔍 Rechercher par nom, marque ou code barre...">
-        <button type="button" onclick="searchProducts()">Rechercher</button>
+    <div style="margin-top: 2rem; display: flex; gap: 0.75rem; align-items: stretch; justify-content: center; flex-wrap: wrap; max-width: 900px; margin-left: auto; margin-right: auto;">
+        <div class="search-wrapper" style="flex: 1; min-width: 250px; max-width: none; margin: 0;">
+            <input type="text" id="searchInput" value="<?= h($q) ?>" placeholder="🔍 Rechercher par nom, marque ou code barre...">
+            <button type="button" onclick="searchProducts()">Rechercher</button>
+        </div>
+        <a href="barcode-scanner.php" class="scanner-btn">
+            <span class="scanner-icon">📷</span>
+            <span class="scanner-text">Scanner</span>
+        </a>
     </div>
 </section>
 
@@ -250,139 +254,32 @@ $categories = $controller->categories();
                     <input type="text" id="sideSearchInput" value="<?= h($q) ?>" placeholder="Nom, marque..." style="width:100%;padding:0.6rem;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;" onkeyup="handleSideSearch(event)">
                 </div>
 
-                <!-- Prix Slider -->
+                <!-- Prix Input -->
                 <div style="margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid #f1f5f9;">
                     <label style="display:block;font-size:0.85rem;font-weight:600;color:#0f172a;margin-bottom:1rem;">💰 Plage de prix (DT)</label>
                     
-                    <!-- Affichage des valeurs -->
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding:0.75rem;background:#f8fafc;border-radius:8px;">
-                        <div style="text-align:center;">
-                            <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;">Min</div>
-                            <div style="font-size:1.2rem;font-weight:600;color:#0f172a;"><span id="minPrice"><?= h($prixMin) ?: '0' ?></span> DT</div>
+                    <!-- Input Fields -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                        <div>
+                            <label style="display:block;font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:600;margin-bottom:0.4rem;">Min</label>
+                            <input type="number" id="priceMinInput" min="0" max="500" value="<?= h($prixMin) ?: '0' ?>" placeholder="0" style="width:100%;padding:0.7rem;border:2px solid #e2e8f0;border-radius:8px;font-size:0.95rem;font-weight:600;color:#0f172a;transition:border-color 0.2s ease;">
                         </div>
-                        <div style="height:1px;background:#e2e8f0;flex:1;margin:0 1rem;"></div>
-                        <div style="text-align:center;">
-                            <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;">Max</div>
-                            <div style="font-size:1.2rem;font-weight:600;color:#0f172a;"><span id="maxPrice"><?= h($prixMax) ?: '500' ?></span> DT</div>
+                        <div>
+                            <label style="display:block;font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:600;margin-bottom:0.4rem;">Max</label>
+                            <input type="number" id="priceMaxInput" min="0" max="500" value="<?= h($prixMax) ?: '500' ?>" placeholder="500" style="width:100%;padding:0.7rem;border:2px solid #e2e8f0;border-radius:8px;font-size:0.95rem;font-weight:600;color:#0f172a;transition:border-color 0.2s ease;">
                         </div>
                     </div>
 
-                    <!-- Range Slider Container -->
-                    <div class="price-slider-container">
-                        <input type="range" id="priceMinSlider" class="price-slider price-slider-min" min="0" max="500" value="<?= h($prixMin) ?: '0' ?>" step="1" oninput="updatePriceSlider()">
-                        <input type="range" id="priceMaxSlider" class="price-slider price-slider-max" min="0" max="500" value="<?= h($prixMax) ?: '500' ?>" step="1" oninput="updatePriceSlider()">
-                        <div class="price-slider-track"></div>
-                    </div>
-
-                    <!-- Slider Styles -->
                     <style>
-                        .price-slider-container {
-                            position: relative;
-                            margin: 2rem 0;
-                            height: 50px;
-                            display: flex;
-                            align-items: center;
-                        }
-
-                        .price-slider {
-                            position: absolute;
-                            width: 100%;
-                            height: 6px;
-                            background: transparent;
+                        #priceMinInput:focus,
+                        #priceMaxInput:focus {
                             outline: none;
-                            -webkit-appearance: none;
-                            -moz-appearance: none;
-                            appearance: none;
-                            cursor: grab;
-                            top: 22px;
-                        }
-
-                        .price-slider-min {
-                            z-index: 5;
-                            pointer-events: auto;
-                        }
-
-                        .price-slider-max {
-                            z-index: 4;
-                            pointer-events: auto;
-                        }
-
-                        .price-slider:active {
-                            cursor: grabbing;
-                            z-index: 9 !important;
-                        }
-
-                        .price-slider-track {
-                            position: absolute;
-                            width: 100%;
-                            height: 6px;
-                            background: #e2e8f0;
-                            border-radius: 3px;
-                            pointer-events: none;
-                            z-index: 1;
-                            top: 22px;
-                        }
-
-                        /* Chrome/Edge */
-                        .price-slider::-webkit-slider-thumb {
-                            -webkit-appearance: none;
-                            appearance: none;
-                            width: 26px;
-                            height: 26px;
-                            border-radius: 50%;
-                            background: #16a34a;
-                            cursor: grab;
-                            box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
-                            border: 3px solid white;
-                            transition: all 0.2s ease;
-                        }
-
-                        .price-slider::-webkit-slider-thumb:hover {
-                            background: #15803d;
-                            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.5);
-                            transform: scale(1.2);
-                        }
-
-                        .price-slider::-webkit-slider-thumb:active {
-                            cursor: grabbing;
-                            transform: scale(1.3);
-                        }
-
-                        /* Firefox */
-                        .price-slider::-moz-range-thumb {
-                            width: 26px;
-                            height: 26px;
-                            border-radius: 50%;
-                            background: #16a34a;
-                            cursor: grab;
-                            box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
-                            border: 3px solid white;
-                            transition: all 0.2s ease;
-                        }
-
-                        .price-slider::-moz-range-thumb:hover {
-                            background: #15803d;
-                            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.5);
-                            transform: scale(1.2);
-                        }
-
-                        .price-slider::-moz-range-thumb:active {
-                            cursor: grabbing;
-                            transform: scale(1.3);
-                        }
-
-                        /* Firefox track */
-                        .price-slider::-moz-range-track {
-                            background: transparent;
-                            border: none;
-                        }
-
-                        .price-slider::-moz-range-progress {
-                            background-color: transparent;
+                            border-color: #16a34a;
+                            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
                         }
                     </style>
 
-                    <button class="primary-btn" onclick="applyPriceFilter()" style="width:100%;padding:0.6rem;font-size:0.9rem;margin-top:1.5rem;">✓ Appliquer le filtre</button>
+                    <button class="primary-btn" onclick="applyPriceFilter()" style="width:100%;padding:0.7rem;font-size:0.9rem;">✓ Appliquer le filtre</button>
                 </div>
 
                 <!-- Catégories -->
@@ -513,84 +410,9 @@ function searchProducts() {
     document.getElementById('filterForm').submit();
 }
 
-function updatePriceSlider() {
-    const minSlider = document.getElementById('priceMinSlider');
-    const maxSlider = document.getElementById('priceMaxSlider');
-    const track = document.querySelector('.price-slider-track');
-    
-    let minVal = parseInt(minSlider.value);
-    let maxVal = parseInt(maxSlider.value);
-    
-    // Empêcher le curseur min de dépasser le max
-    if (minVal > maxVal) {
-        minVal = maxVal;
-        minSlider.value = maxVal;
-    }
-    
-    // Empêcher le curseur max de descendre sous le min
-    if (maxVal < minVal) {
-        maxVal = minVal;
-        maxSlider.value = minVal;
-    }
-    
-    // Mettre à jour l'affichage des valeurs
-    document.getElementById('minPrice').textContent = minVal;
-    document.getElementById('maxPrice').textContent = maxVal;
-    
-    // Mettre à jour l'arrière-plan du slider
-    const minPercent = (minVal / 500) * 100;
-    const maxPercent = (maxVal / 500) * 100;
-    
-    if (track) {
-        track.style.background = `linear-gradient(to right, #e2e8f0 0%, #e2e8f0 ${minPercent}%, #16a34a ${minPercent}%, #16a34a ${maxPercent}%, #e2e8f0 ${maxPercent}%, #e2e8f0 100%)`;
-    }
-}
-
-// Gestion des z-index dynamiques pour le dual slider
-document.addEventListener('DOMContentLoaded', function() {
-    const minSlider = document.getElementById('priceMinSlider');
-    const maxSlider = document.getElementById('priceMaxSlider');
-    
-    // Au démarrage
-    updatePriceSlider();
-    
-    // Quand on commence à slider le min, le mettre au-dessus du max
-    minSlider.addEventListener('mousedown', function() {
-        minSlider.style.zIndex = '9';
-        maxSlider.style.zIndex = '4';
-    });
-    
-    minSlider.addEventListener('touchstart', function() {
-        minSlider.style.zIndex = '9';
-        maxSlider.style.zIndex = '4';
-    });
-    
-    // Quand on commence à slider le max, le mettre au-dessus du min
-    maxSlider.addEventListener('mousedown', function() {
-        maxSlider.style.zIndex = '9';
-        minSlider.style.zIndex = '5';
-    });
-    
-    maxSlider.addEventListener('touchstart', function() {
-        maxSlider.style.zIndex = '9';
-        minSlider.style.zIndex = '5';
-    });
-    
-    // Remettre les z-index normaux quand on relâche
-    document.addEventListener('mouseup', function() {
-        minSlider.style.zIndex = '5';
-        maxSlider.style.zIndex = '4';
-    });
-    
-    document.addEventListener('touchend', function() {
-        minSlider.style.zIndex = '5';
-        maxSlider.style.zIndex = '4';
-    });
-});
-
 function applyPriceFilter() {
-    const minPrice = document.getElementById('priceMinSlider').value;
-    const maxPrice = document.getElementById('priceMaxSlider').value;
+    const minPrice = document.getElementById('priceMinInput').value;
+    const maxPrice = document.getElementById('priceMaxInput').value;
     
     document.getElementById('f_prix_min').value = minPrice;
     document.getElementById('f_prix_max').value = maxPrice;
@@ -649,11 +471,6 @@ document.getElementById('searchInput').addEventListener('keydown', function(even
         document.getElementById('sideSearchInput').value = this.value;
         searchProducts();
     }
-});
-
-// Initialiser le slider de prix
-document.addEventListener('DOMContentLoaded', function() {
-    updatePriceSlider();
 });
 </script>
 
