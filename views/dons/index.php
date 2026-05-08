@@ -110,6 +110,27 @@ require_once __DIR__ . '/../layout_header.php';
     <h2 id="don-modal-title">Nouveau don</h2>
     <div id="don-alert" class="form-alert" style="display:none;"></div>
 
+    <!-- ZONE UPLOAD IMAGE IA -->
+    <div id="don-image-section" style="margin-bottom:1.25rem;">
+      <label class="form-label-section">📸 Photo du don <span style="font-size:0.78rem;color:#64748b;font-weight:400;">(vérification alimentaire par IA)</span></label>
+      <div id="don-dropzone"
+           onclick="document.getElementById('don-image-input').click()"
+           ondragover="event.preventDefault();this.style.borderColor='#0f766e';"
+           ondragleave="this.style.borderColor='#14b8a6';"
+           ondrop="handleDonImageDrop(event)"
+           style="margin-top:8px;border:2px dashed #14b8a6;border-radius:14px;padding:20px;text-align:center;cursor:pointer;background:#f0fdfa;transition:all 0.2s;">
+        <div id="don-dropzone-content">
+          <div style="font-size:2rem;">📁</div>
+          <div style="font-size:0.85rem;color:#0f766e;font-weight:600;margin-top:4px;">Cliquez ou glissez une image ici</div>
+          <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">JPEG, PNG, WebP — max 5 Mo</div>
+        </div>
+        <img id="don-image-preview" src="" alt="" style="display:none;max-height:140px;border-radius:10px;margin-top:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+      </div>
+      <input type="file" id="don-image-input" accept="image/*" style="display:none;" onchange="handleDonImageSelect(this.files[0])">
+      <!-- Badge statut IA -->
+      <div id="don-ai-badge" style="display:none;margin-top:10px;padding:10px 14px;border-radius:12px;font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:8px;"></div>
+    </div>
+
     <div style="margin-bottom:1rem;">
       <label class="form-label-section">Produits du don *</label>
       <div id="produits-lines" style="margin-top:0.5rem;display:flex;flex-direction:column;gap:8px;"></div>
@@ -140,7 +161,7 @@ require_once __DIR__ . '/../layout_header.php';
     <div class="form-actions">
       <button class="btn-danger" id="don-btn-delete" style="display:none;margin-right:auto;" onclick="deleteDon()">🗑️ Supprimer</button>
       <button class="btn-cancel" onclick="closeDonModal()">Annuler</button>
-      <button class="primary-btn" style="padding:10px 24px;" onclick="saveDon()">Enregistrer</button>
+      <button class="primary-btn" id="don-btn-save" style="padding:10px 24px;" onclick="saveDon()">Enregistrer</button>
     </div>
   </div>
 </div>

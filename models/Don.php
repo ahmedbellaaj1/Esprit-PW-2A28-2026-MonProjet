@@ -23,13 +23,14 @@ class Don {
         $action = $_GET['action'] ?? '';
 
         match (true) {
-            $method === 'GET'    && $action === 'stats'    => $this->stats(),
-            $method === 'GET'    && $action === 'one'      => $this->getOne(),
-            $method === 'GET'                              => $this->index(),
-            $method === 'POST'                             => $this->store(),
-            $method === 'PUT'    && $action === 'statut'   => $this->updateStatut(),
-            $method === 'PUT'                              => $this->update(),
-            $method === 'DELETE'                           => $this->destroy(),
+            $method === 'GET'    && $action === 'stats'         => $this->stats(),
+            $method === 'GET'    && $action === 'one'           => $this->getOne(),
+            $method === 'GET'                                   => $this->index(),
+            $method === 'POST'   && $action === 'verify-image'  => $this->verifyImageUpload(),
+            $method === 'POST'                                  => $this->store(),
+            $method === 'PUT'    && $action === 'statut'        => $this->updateStatut(),
+            $method === 'PUT'                                   => $this->update(),
+            $method === 'DELETE'                                => $this->destroy(),
             default => $this->jsonError('Méthode non autorisée', 405)
         };
     }
@@ -139,6 +140,42 @@ class Don {
             return;
         }
         echo json_encode(['success' => true, 'message' => 'Don supprimé.']);
+    }
+
+    private function verifyImageUpload(): void {
+        if (empty($_FILES['image'])) {
+            $this->jsonError('Aucun fichier reçu.', 400);
+            return;
+        }
+
+        $file     = $_FILES['image'];
+        $allowed  = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        $finfo    = new finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file['tmp_name']);
+
+        if (!in_array($mimeType, $allowed, true)) {
+            $this->jsonError('Format non supporté. Utilisez JPEG, PNG ou WebP.', 415);
+            return;
+        }
+
+        if ($file['size'] > 5 * 1024 * 1024) {
+            $this->jsonError('Image trop lourde (max 5 Mo).', 413);
+            return;
+        }
+
+        $imageData = file_get_contents($file['tmp_name']);
+        $result    = $this->controller->verifyImage($imageData, $mimeType);
+
+        $message = $result['is_food']
+            ? '✅ Produit alimentaire confirmé : ' . $result['label']
+            : '❌ Produit non alimentaire : ' . $result['label'];
+
+        echo json_encode([
+            'success'  => true,
+            'is_food'  => $result['is_food'],
+            'label'    => $result['label'],
+            'message'  => $message
+        ]);
     }
 
     private function getBody(): array {

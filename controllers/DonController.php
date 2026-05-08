@@ -2,6 +2,7 @@
 // controllers/DonController.php — Logique métier (CRUD) pour les dons
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/gemini.php';
 
 class DonController {
 
@@ -108,15 +109,20 @@ class DonController {
     }
 
     public function getStats(): array {
-        // Mettre à jour les périmés avant de calculer les stats
         $this->autoUpdatePerimes();
 
-        $res   = $this->db->query("SELECT statut, COUNT(*) AS total FROM Don GROUP BY statut");
+        $sql = "SELECT statut, COUNT(*) as nb FROM Don GROUP BY statut";
+        $stmt = $this->db->query($sql);
+        $results = $stmt->fetchAll();
+
         $stats = ['disponible' => 0, 'réservé' => 0, 'récupéré' => 0, 'périmé' => 0];
-        while ($row = $res->fetch()) {
-            $stats[$row['statut']] = (int)$row['total'];
+
+        foreach ($results as $row) {
+            if (isset($stats[$row['statut']])) {
+                $stats[$row['statut']] = (int)$row['nb'];
+            }
         }
-        $stats['total'] = array_sum($stats);
+
         return $stats;
     }
 
@@ -224,6 +230,76 @@ class DonController {
                       HAVING MAX(date_peremption) < CURDATE()
                   )";
         $this->db->exec($sql);
+    }
+
+    // ── IA VISION ────────────────────────────────────────────────
+
+    /**
+     * Envoie une image à Google Gemini Vision et vérifie si c'est un produit alimentaire.
+     * @param string $imageData  Contenu brut du fichier image
+     * @param string $mimeType   Ex: image/jpeg, image/png, image/webp
+     * @return array { is_food: bool, label: string, confidence: string }
+     */
+    public function verifyImage(string $imageData, string $mimeType): array {
+        if (!defined('GEMINI_API_KEY') || GEMINI_API_KEY === 'VOTRE_CLE_API_GEMINI_ICI') {
+            return ['is_food' => false, 'label' => 'Clé API Gemini non configurée.', 'confidence' => 'N/A'];
+        }
+
+        $base64 = base64_encode($imageData);
+
+        $payload = json_encode([
+            'contents' => [[
+                'parts' => [
+                    [
+                        'text' => 'Analyse cette image. Est-ce qu\'elle montre un ou plusieurs produits alimentaires (nourriture, boissons, fruits, légumes, conserves, épicerie, etc.) ?' .
+                                  ' Réponds UNIQUEMENT en JSON valide avec ce format exact : {"is_food": true, "label": "description courte en français"}' .
+                                  ' Si ce n\'est PAS alimentaire, réponds : {"is_food": false, "label": "description courte en français"}'
+                    ],
+                    [
+                        'inline_data' => [
+                            'mime_type' => $mimeType,
+                            'data'      => $base64
+                        ]
+                    ]
+                ]
+            ]]
+        ]);
+
+        $ch = curl_init(GEMINI_API_URL . '?key=' . GEMINI_API_KEY);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+            CURLOPT_TIMEOUT        => 20
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if (!$response || $httpCode !== 200) {
+            $msg = 'Erreur de communication avec l\'IA (HTTP ' . $httpCode . ').';
+            if ($httpCode === 429) {
+                $msg = 'Limite de requêtes atteinte (Quota dépassé). Veuillez patienter une minute avant de réessayer.';
+            }
+            return ['is_food' => false, 'label' => $msg, 'confidence' => 'N/A'];
+        }
+
+        $data = json_decode($response, true);
+        $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+        // Extraire le JSON de la réponse (Gemini peut ajouter du texte autour)
+        if (preg_match('/\{[^}]+\}/', $text, $matches)) {
+            $result = json_decode($matches[0], true);
+            if (isset($result['is_food'])) {
+                return [
+                    'is_food' => (bool)$result['is_food'],
+                    'label'   => $result['label'] ?? 'Résultat inconnu',
+                ];
+            }
+        }
+
+        return ['is_food' => false, 'label' => 'Réponse IA illisible.'];
     }
 
     private function insertProduits(int $id_don, array $produits): void {
