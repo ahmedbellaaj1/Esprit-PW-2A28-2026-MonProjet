@@ -1,24 +1,20 @@
 <?php
 session_start();
 include "../config/db.php";
-require_once __DIR__ . '/fpdf186/fpdf.php';
+require_once __DIR__ . '/../controller/AdminController.php';
+require_once __DIR__ . '/../assets/libs/fpdf186/fpdf.php';
 
 try {
-    // Récupérer tous les utilisateurs avec leurs préférences
-    $sql = "SELECT u.id as user_id, u.email, 
-                   pa.type_preference, pa.poids, pa.age, pa.calories 
-            FROM users u
-            LEFT JOIN preferences_alimentaires pa ON u.id = pa.id_user
-            ORDER BY u.id DESC, pa.id ASC";
-    $stmt = $pdo->query($sql);
-    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // MVC: Fetch data via Controller
+    $data = AdminController::getDashboardData($pdo);
+    $users = $data['users'];
 
     // Créer le PDF
     $pdf = new FPDF();
     $pdf->AddPage();
     
     // Header
-    $pdf->SetFillColor(15, 118, 110); // Couleur Greenbite #0f766e
+    $pdf->SetFillColor(15, 118, 110); 
     $pdf->SetTextColor(255, 255, 255);
     $pdf->SetFont('Arial', 'B', 16);
     $pdf->Cell(0, 20, 'Liste des Preferences Utilisateurs - Greenbite', 0, 1, 'C', true);
@@ -39,12 +35,12 @@ try {
     // Table Body
     $pdf->SetFont('Arial', '', 9);
     foreach ($users as $u) {
-        $pdf->Cell(10, 8, $u['user_id'], 1, 0, 'C');
-        $pdf->Cell(60, 8, utf8_decode($u['email']), 1, 0, 'L');
-        $pdf->Cell(50, 8, utf8_decode($u['type_preference'] ?? 'Aucune'), 1, 0, 'L');
-        $pdf->Cell(20, 8, ($u['age'] ?? '-'), 1, 0, 'C');
-        $pdf->Cell(20, 8, ($u['poids'] ?? '-') . ' kg', 1, 0, 'C');
-        $pdf->Cell(30, 8, ($u['calories'] ?? '-') . ' kcal', 1, 1, 'C');
+        $pdf->Cell(10, 8, $u->getId(), 1, 0, 'C');
+        $pdf->Cell(60, 8, utf8_decode($u->getEmail()), 1, 0, 'L');
+        $pdf->Cell(50, 8, utf8_decode($u->getPreferences() ?? 'Aucune'), 1, 0, 'L');
+        $pdf->Cell(20, 8, ($u->getAge() ?? '-'), 1, 0, 'C');
+        $pdf->Cell(20, 8, ($u->getPoids() ?? '-') . ' kg', 1, 0, 'C');
+        $pdf->Cell(30, 8, ($u->getCalories() ?? '-') . ' kcal', 1, 1, 'C');
     }
 
     // Output

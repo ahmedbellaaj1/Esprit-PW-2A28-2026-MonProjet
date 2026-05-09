@@ -1,8 +1,7 @@
 <?php
-session_start();
-include '../config/db.php';
-
-require_once '../controller/AdminController.php';
+// La session est déjà démarrée par le Front Controller (index.php)
+include 'config/db.php';
+require_once 'controller/AdminController.php';
 
 $data = AdminController::getDashboardData($pdo);
 $users = $data['users'];
@@ -15,7 +14,7 @@ $allProducts = $data['products'];
 <meta charset="UTF-8">
 <title>Back Office - Greenbite</title>
 
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="<?= BASE_URL ?>assets/css/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
@@ -155,12 +154,12 @@ $allProducts = $data['products'];
     <div class="sidebar-role">Administration</div>
 
     <nav class="sidebar-nav">
-        <a class="sidebar-link" href="../greenbite/index.php">📊 Dashboard</a>
-        <a class="sidebar-link active" href="backoffice.php">⚙️ Admin</a>
+        <a class="sidebar-link" href="index.php?page=dashboard">📊 Dashboard</a>
+        <a class="sidebar-link active" href="index.php?page=admin">⚙️ Admin</a>
     </nav>
 
     <div class="sidebar-bottom">
-        <a class="sidebar-link" href="../index.php">🚪 Retour</a>
+        <a class="sidebar-link" href="index.php?page=home">🚪 Retour</a>
     </div>
 </aside>
 
@@ -216,7 +215,7 @@ $allProducts = $data['products'];
             <button onclick="sortPoidsDesc()" class="btn-submit" style="margin-top:0; display:inline-flex; align-items:center; gap:8px; background:#10b981; padding:8px 15px;">
                 <i class="fas fa-sort-amount-down"></i> Trier par Poids
             </button>
-            <a href="../api/export_users.php" class="btn-submit" style="margin-top:0; display:inline-flex; align-items:center; gap:8px; text-decoration:none; padding:8px 15px;">
+            <a href="api/export_users.php" class="btn-submit" style="margin-top:0; display:inline-flex; align-items:center; gap:8px; text-decoration:none; padding:8px 15px;">
                 <i class="fas fa-file-pdf"></i> Exporter
             </a>
         </div>
@@ -228,9 +227,10 @@ $allProducts = $data['products'];
                 <th onclick="sortTable(0)" style="cursor:pointer;">ID <i class="fa-solid fa-sort"></i></th>
                 <th onclick="sortTable(1)" style="cursor:pointer;">Email <i class="fa-solid fa-sort"></i></th>
                 <th onclick="sortTable(2)" style="cursor:pointer;">Préférence <i class="fa-solid fa-sort"></i></th>
-                <th onclick="sortTable(3)" style="cursor:pointer;">Âge <i class="fa-solid fa-sort"></i></th>
-                <th onclick="sortTable(4)" style="cursor:pointer;">Poids <i class="fa-solid fa-sort"></i></th>
-                <th onclick="sortTable(5)" style="cursor:pointer;">Calories <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable(3)" style="cursor:pointer;">Allergies <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable(4)" style="cursor:pointer;">Âge <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable(5)" style="cursor:pointer;">Poids <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortTable(6)" style="cursor:pointer;">Calories <i class="fa-solid fa-sort"></i></th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -238,14 +238,18 @@ $allProducts = $data['products'];
         <tbody>
             <?php foreach ($users as $u): ?>
             <tr>
-                <td><?= $u['user_real_id'] ?></td>
-                <td><?= htmlspecialchars($u['email']) ?></td>
-                <td><span class="badge badge-blue"><?= htmlspecialchars($u['type_preference'] ?? 'Aucune') ?></span></td>
-                <td><span class="badge badge-blue"><?= $u['age'] ?? '-' ?></span></td>
-                <td><span class="badge badge-green"><?= $u['poids'] ?? '-' ?> kg</span></td>
-                <td><span class="badge badge-orange"><?= $u['calories'] ?? '-' ?> kcal</span></td>
+                <td><?= $u->getId() ?></td>
+                <td><?= htmlspecialchars($u->getEmail()) ?></td>
+                <td><span class="badge badge-blue"><?= htmlspecialchars($u->getPreferences() ?? 'Aucune') ?></span></td>
+                <td><span class="badge badge-orange"><?= htmlspecialchars($u->getAllergies() ?? 'Aucune') ?></span></td>
+                <td><span class="badge badge-blue"><?= $u->getAge() ?? '-' ?></span></td>
+                <td><span class="badge badge-green"><?= $u->getPoids() ?? '-' ?> kg</span></td>
+                <td><span class="badge badge-orange"><?= $u->getCalories() ?? '-' ?> kcal</span></td>
                 <td>
-                    <button onclick="deleteUser(<?= $u['user_real_id'] ?>)" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Supprimer l'utilisateur">
+                    <button onclick="openEditModal(<?= htmlspecialchars(json_encode($u)) ?>)" style="background:none; border:none; color:#3b82f6; cursor:pointer; margin-right:10px;" title="Modifier l'utilisateur">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteUser(<?= $u->getId() ?>)" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Supprimer l'utilisateur">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -260,9 +264,9 @@ $allProducts = $data['products'];
     <h3><i class="fa-solid fa-plus-circle"></i> Ajouter un Produit</h3>
     
     <form id="add-product-form" class="product-form" onsubmit="submitProduct(event)">
-        <input type="text" id="prod-nom" name="nom" placeholder="Nom du produit (ex: Salade César)" required>
+        <input type="text" id="prod-nom" name="nom" placeholder="Nom du produit (ex: Salade César)">
         
-        <select id="prod-cat" name="categorie" required>
+        <select id="prod-cat" name="categorie">
             <option value="">-- Choisir une catégorie --</option>
             <option value="Salades">Salades</option>
             <option value="Fast Food">Fast Food</option>
@@ -273,8 +277,8 @@ $allProducts = $data['products'];
         </select>
         
         <div style="display: flex; gap: 10px;">
-            <input type="number" id="prod-cal" name="calories" placeholder="Calories (kcal)" min="0" style="flex: 1;">
-            <input type="number" id="prod-prix" name="prix" placeholder="Prix (DT)" step="0.01" min="0" style="flex: 1;">
+            <input type="number" id="prod-cal" name="calories" placeholder="Calories (kcal)" style="flex: 1;">
+            <input type="number" id="prod-prix" name="prix" placeholder="Prix (DT)" step="0.01" style="flex: 1;">
         </div>
         
         <textarea id="prod-desc" name="description" placeholder="Description du produit..."></textarea>
@@ -302,13 +306,13 @@ $allProducts = $data['products'];
         <tbody>
             <?php foreach ($allProducts as $p): ?>
             <tr>
-                <td><?= $p['id'] ?></td>
-                <td><?= htmlspecialchars($p['nom']) ?></td>
-                <td><span class="badge badge-blue"><?= $p['categorie'] ?></span></td>
-                <td><?= number_format($p['prix'], 2) ?> DT</td>
-                <td><?= $p['calories'] ?> kcal</td>
+                <td><?= $p->getId() ?></td>
+                <td><?= htmlspecialchars($p->getNom()) ?></td>
+                <td><span class="badge badge-blue"><?= $p->getCategorie() ?></span></td>
+                <td><?= number_format($p->getPrix(), 2) ?> DT</td>
+                <td><?= $p->getCalories() ?> kcal</td>
                 <td>
-                    <button onclick="deleteProduct(<?= $p['id'] ?>)" style="background:none; border:none; color:#ef4444; cursor:pointer;">
+                    <button onclick="deleteProduct(<?= $p->getId() ?>)" style="background:none; border:none; color:#ef4444; cursor:pointer;">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -341,12 +345,57 @@ $allProducts = $data['products'];
 </div>
 </div>
 
+<!-- ✏️ MODAL MODIFICATION UTILISATEUR -->
+<div id="editUserModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div class="card" style="width:100%; max-width:500px; position:relative;">
+        <button onclick="closeEditModal()" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+        <h3><i class="fas fa-user-edit"></i> Modifier le profil client</h3>
+        <form id="edit-user-form" class="product-form" onsubmit="saveUserChanges(event)">
+            <input type="hidden" id="edit-user-id" name="id">
+            
+            <label>Nom complet</label>
+            <input type="text" id="edit-user-nom" name="nom">
+            
+            <label>Email</label>
+            <input type="email" id="edit-user-email" name="email" readonly style="background:#f1f5f9;">
+            
+            <div style="display: flex; gap: 10px;">
+                <div style="flex:1;">
+                    <label>Préférences</label>
+                    <input type="text" id="edit-user-prefs" name="preferences" placeholder="Ex: Végétarien">
+                </div>
+                <div style="flex:1;">
+                    <label>Allergies</label>
+                    <input type="text" id="edit-user-allergies" name="allergies" placeholder="Ex: Lactose, Oeufs">
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <div style="flex:1;">
+                    <label>Âge</label>
+                    <input type="number" id="edit-user-age" name="age">
+                </div>
+                <div style="flex:1;">
+                    <label>Poids (kg)</label>
+                    <input type="number" id="edit-user-poids" name="poids">
+                </div>
+                <div style="flex:1;">
+                    <label>Calories</label>
+                    <input type="number" id="edit-user-calories" name="calories">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-submit">Mettre à jour le profil</button>
+        </form>
+    </div>
+</div>
+
 <!-- JS -->
 <script>
 
 // LOAD STATS
 function loadStats() {
-    fetch("../api/get_stats.php")
+    fetch("api/get_stats.php")
     .then(res => res.json())
     .then(data => {
         document.getElementById('stat-prefs').textContent = data.total_preferences;
@@ -360,12 +409,13 @@ function loadStats() {
 // LOAD OPTIONS
 function loadOptions() {
     loadStats(); // Charger aussi les stats ici
-    fetch("../rappel/get_options.php")
+    fetch("api/get_options.php")
     .then(res => res.json())
     .then(data => {
         renderList('prefs-list', data.preferences, 'preference');
         renderList('allergies-list', data.allergies, 'allergy');
-    });
+    })
+    .catch(err => console.error("Erreur options:", err));
 }
 
 // RENDER LIST
@@ -385,19 +435,24 @@ function renderList(id, data, type) {
 function addOption(type) {
     const input = type === 'preference' ? 'new-pref' : 'new-allergy';
     const name = document.getElementById(input).value;
+    if(!name) return;
 
-    fetch("../rappel/add_option.php", {
+    fetch("api/add_option.php", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({type, name})
     })
     .then(res => res.json())
-    .then(() => loadOptions());
+    .then(data => {
+        document.getElementById(input).value = '';
+        loadOptions();
+    });
 }
 
 // DELETE
 function deleteOption(id, type) {
-    fetch("../rappel/delete_option.php", {
+    if(!confirm("Supprimer cette option pour TOUS les utilisateurs ?")) return;
+    fetch("api/delete_option.php", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({id, type})
@@ -407,9 +462,10 @@ function deleteOption(id, type) {
 
 // EDIT
 function editOption(id, name, type) {
-    const newName = prompt("Modifier:", name);
-
-    fetch("../rappel/update_option.php", {
+    const newName = prompt("Nouveau nom :", name);
+    if(!newName) return;
+    
+    fetch("api/update_option.php", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({id, type, name: newName})
@@ -427,7 +483,7 @@ function submitProduct(e) {
     
     msgDiv.innerHTML = '<span style="color:#64748b;">Ajout en cours...</span>';
     
-    fetch("../api/add_product.php", {
+    fetch("api/add_product.php", {
         method: "POST",
         body: formData
     })
@@ -550,7 +606,7 @@ function sortPoidsDesc() {
 // 🗑️ SUPPRIMER UTILISATEUR
 function deleteUser(id) {
     if (confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
-        fetch("../api/delete_user.php", {
+        fetch("api/delete_user.php", {
             method: "POST",
             headers: {"Content-Type":"application/json"},
             body: JSON.stringify({id})
@@ -569,7 +625,7 @@ function deleteUser(id) {
 // 🗑️ SUPPRIMER PRODUIT
 function deleteProduct(id) {
     if (confirm("Supprimer ce produit ?")) {
-        fetch("../api/delete_product.php", {
+        fetch("api/delete_product.php", {
             method: "POST",
             headers: {"Content-Type":"application/json"},
             body: JSON.stringify({id})
@@ -580,6 +636,45 @@ function deleteProduct(id) {
             else alert(data.message);
         });
     }
+}
+
+// ✏️ MODIFIER UTILISATEUR (MODAL)
+function openEditModal(user) {
+    document.getElementById('edit-user-id').value = user.id;
+    document.getElementById('edit-user-nom').value = user.nom;
+    document.getElementById('edit-user-email').value = user.email;
+    document.getElementById('edit-user-prefs').value = user.preferences || '';
+    document.getElementById('edit-user-allergies').value = user.allergies || '';
+    document.getElementById('edit-user-age').value = user.age || '';
+    document.getElementById('edit-user-poids').value = user.poids || '';
+    document.getElementById('edit-user-calories').value = user.calories || '';
+    
+    document.getElementById('editUserModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('editUserModal').style.display = 'none';
+}
+
+function saveUserChanges(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {};
+    formData.forEach((value, key) => data[key] = value);
+
+    fetch("api/register.php", {
+        method: "POST",
+        headers: {"Content-Type":"application/x-www-form-urlencoded"},
+        body: new URLSearchParams(data).toString()
+    })
+    .then(() => {
+        alert("Profil mis à jour !");
+        location.reload();
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Erreur lors de la mise à jour");
+    });
 }
 
 window.onload = loadOptions;

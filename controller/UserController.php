@@ -1,6 +1,7 @@
 <?php
-require_once "../config/db.php";
-require_once "../model/PreferenceModel.php";
+require_once __DIR__ . "/../config/db.php";
+require_once __DIR__ . "/../model/User.php";
+require_once __DIR__ . "/../model/UserModel.php";
 
 class UserController {
 
@@ -10,23 +11,37 @@ class UserController {
 
         header('Content-Type: application/json; charset=utf-8');
 
-        if (!isset($_GET['id_user'])) {
-            http_response_code(400);
-            echo json_encode(["status" => "error", "message" => "id_user manquant"]);
-            return;
-        }
-
-        $id_user = intval($_GET['id_user']);
-        
-        if ($id_user <= 0) {
-            http_response_code(400);
-            echo json_encode(["status" => "error", "message" => "id_user invalide"]);
-            return;
-        }
-
         try {
-            $data = PreferenceModel::getProfile($pdo, $id_user);
-            echo json_encode(["status" => "success", "data" => $data]);
+            $u = new User();
+            $u->setId($_GET['id_user'] ?? 0);
+            
+            if ($u->getId() <= 0) {
+                http_response_code(400);
+                echo json_encode(["status" => "error", "message" => "id_user invalide"]);
+                return;
+            }
+
+            $u = UserModel::getById($pdo, $u->getId());
+            if (!$u) {
+                 echo json_encode(["status" => "error", "message" => "Utilisateur non trouvé"]);
+                 return;
+            }
+
+            // On récupère les détails via UserModel
+            $details = UserModel::getProfileDetails($pdo, $u->getId());
+            
+            // On peut setter les valeurs dans l'objet User (même si elles y sont déjà peut-être partiellement)
+            $u->setPreferences($details['preferences']);
+            $u->setAllergies($details['allergies']);
+
+            // Et on utilise les GETTERS pour construire la réponse
+            echo json_encode([
+                "status" => "success", 
+                "data" => [
+                    "preferences" => $u->getPreferences(),
+                    "allergies" => $u->getAllergies()
+                ]
+            ]);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
@@ -47,22 +62,49 @@ class UserController {
             return;
         }
 
-        $id_user = intval($data['id_user']);
-        $preferences = is_array($data['preferences'] ?? null) ? $data['preferences'] : [];
-        $allergies = is_array($data['allergies'] ?? null) ? $data['allergies'] : [];
-
-        if ($id_user <= 0) {
-            http_response_code(400);
-            echo json_encode(["status" => "error", "message" => "id_user invalide"]);
-            return;
-        }
-
         try {
-            PreferenceModel::saveProfile($pdo, $id_user, $preferences, $allergies);
+            $user = new User();
+            $user->setId($data['id_user'] ?? 0);
+            $user->setPreferences($data['preferences'] ?? []);
+            $user->setAllergies($data['allergies'] ?? []);
+
+            if ($user->getId() <= 0) {
+                http_response_code(400);
+                echo json_encode(["status" => "error", "message" => "id_user invalide"]);
+                return;
+            }
+
+            // Utiliser le Model avec l'objet
+            UserModel::saveProfile($pdo, $user);
+            
             echo json_encode(["status" => "success", "message" => "Profil enregistré avec succès"]);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
+    public static function register($pdo, $postData) {
+        try {
+            $user = new User();
+            $user->setNom($postData['nom'] ?? '');
+            $user->setEmail($postData['email'] ?? '');
+            $user->setPreferences($postData['preferences'] ?? '');
+            $user->setAllergies($postData['allergies'] ?? '');
+            $user->setPoids($postData['poids'] ?? 0);
+            $user->setAge($postData['age'] ?? 0);
+            $user->setCalories($postData['calories'] ?? 0);
+
+            if (empty($user->getNom()) || empty($user->getEmail())) {
+                throw new Exception("Nom et email obligatoires");
+            }
+
+            $user_id = UserModel::save($pdo, $user);
+            $_SESSION['user_id'] = $user_id;
+
+            return $user;
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 }
