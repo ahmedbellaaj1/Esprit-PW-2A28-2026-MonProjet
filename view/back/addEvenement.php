@@ -48,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($formData['date'])) {
         $errors['date'] = "La date est obligatoire";
     } else {
-        // Vérifier le format YYYY-MM-DD
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $formData['date'])) {
             $errors['date'] = "Format de date invalide. Utilisez le format AAAA-MM-JJ (ex: 2025-12-31)";
         } else {
@@ -61,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($dateObj < $today) {
                     $errors['date'] = "La date ne peut pas être dans le passé. Choisissez une date à partir d'aujourd'hui";
                 }
-                // Vérifier que la date n'est pas trop loin (max +5 ans)
                 $maxDate = (new DateTime())->modify('+5 years');
                 if ($dateObj > $maxDate) {
                     $errors['date'] = "La date ne peut pas dépasser 5 ans dans le futur";
@@ -93,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!is_numeric($formData['organisateur_id']) || $formData['organisateur_id'] <= 0) {
         $errors['organisateur_id'] = "Veuillez sélectionner un organisateur valide";
     } else {
-        // Vérifier que l'organisateur existe dans la base
         $organisateurExists = false;
         foreach ($organisateurs as $org) {
             if ($org['id'] == $formData['organisateur_id']) {
@@ -104,11 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$organisateurExists) {
             $errors['organisateur_id'] = "L'organisateur sélectionné n'existe pas";
         }
-    }
-    
-    // 7. Validation CSRF (protection basique)
-    if (empty($_SERVER['HTTP_REFERER']) || strpos($_SERVER['HTTP_REFERER'], 'addEvenement.php') === false) {
-        // Pas de protection CSRF stricte pour simplifier, mais on peut ajouter un token
     }
     
     // ==================== TRAITEMENT SI PAS D'ERREURS ====================
@@ -136,7 +128,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = $e->getMessage();
         }
     } else {
-        // Construction du message d'erreur HTML
         $error = '<ul style="margin:0; padding-left:1.5rem;">';
         foreach ($errors as $field => $message) {
             $error .= '<li><strong>' . htmlspecialchars($field) . '</strong>: ' . htmlspecialchars($message) . '</li>';
@@ -159,11 +150,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: 'Inter', system-ui, sans-serif;
             background: linear-gradient(135deg, #f0fdfa 0%, #e6f7f5 100%);
             min-height: 100vh;
+        }
+        .dashboard-container { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f766e 0%, #0c5f58 100%);
+            color: white;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .sidebar-logo {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .sidebar-logo-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        
+        .sidebar-logo-text h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+            line-height: 1.2;
+        }
+        
+        .sidebar-logo-text span {
+            color: #99f6e4;
+        }
+        
+        .sidebar-logo-text p {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin: 0;
+            margin-top: 2px;
+        }
+        
+        .sidebar-logo-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+        
+        .sidebar-nav { padding: 0 1rem; }
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 12px;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            transform: translateX(5px);
+        }
+        .sidebar-link .icon { font-size: 1.2rem; width: 28px; }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
             padding: 2rem;
         }
+        .page-header { margin-bottom: 2rem; }
+        .page-header h1 { font-size: 2rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; }
+        .page-header p { color: #64748b; font-size: 0.95rem; }
+        
+        /* Alert */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #dc2626;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Form Container */
         .form-container {
-            max-width: 800px;
-            margin: 0 auto;
             background: white;
             border-radius: 24px;
             box-shadow: 0 20px 40px rgba(15, 118, 110, 0.15);
@@ -194,7 +283,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .form-group label .required { color: #dc2626; margin-left: 0.25rem; }
         
-        /* PAS d'attributs HTML5 comme required, minlength, maxlength, pattern, type="email", type="date" */
         .form-group input,
         .form-group textarea,
         .form-group select {
@@ -228,14 +316,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 12px;
             margin-bottom: 1.5rem;
             border-left: 4px solid #dc2626;
-        }
-        .success-message {
-            background: #dcfce7;
-            color: #166534;
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid #16a34a;
         }
         .form-actions {
             display: flex;
@@ -288,12 +368,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-color: #dc2626 !important;
             background-color: #fef2f2 !important;
         }
-        .field-success {
-            border-color: #16a34a !important;
-            background-color: #f0fdf4 !important;
-        }
+        
         @media (max-width: 768px) {
-            body { padding: 1rem; }
+            .main-content { margin-left: 0; padding: 1rem; margin-top: 4rem; }
             .form-header { padding: 1.5rem; }
             .form-header h1 { font-size: 1.4rem; }
             .form-body { padding: 1.5rem; }
@@ -303,100 +380,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <div class="form-header">
-            <h1>➕ Ajouter un événement</h1>
-            <p>Créez un nouvel événement pour la communauté GreenBite</p>
-        </div>
-        
-        <div class="form-body">
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-wrapper">
+                    <div class="sidebar-logo-text">
+                        <h2>Green<span>Bite</span></h2>
+                        <p>Administration</p>
+                    </div>
+                    <img src="../../assets/images/logo.png" alt="GreenBite" class="sidebar-logo-img">
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboardEvenement.php" class="sidebar-link">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="stats.php" class="sidebar-link">
+                    <span class="icon">📈</span>
+                    <span>Statistiques</span>
+                </a>
+                <a href="participants.php" class="sidebar-link">
+                    <span class="icon">👥</span>
+                    <span>Participants</span>
+                </a>
+                <a href="organisateurs.php" class="sidebar-link">
+                    <span class="icon">👥</span>
+                    <span>Organisateurs</span>
+                </a>
+                <a href="addEvenement.php" class="sidebar-link active">
+                    <span class="icon">➕</span>
+                    <span>Ajouter un événement</span>
+                </a>
+                <a href="../front/listEvenements.php" class="sidebar-link">
+                    <span class="icon">🌍</span>
+                    <span>Voir le site</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Ajouter un événement</h1>
+                <p>Créez un nouvel événement pour la communauté GreenBite</p>
+            </div>
+
             <?php if ($error): ?>
-                <div class="error-message">
+                <div class="alert">
                     <strong>❌ Erreurs de validation :</strong><br>
                     <?= $error ?>
                 </div>
             <?php endif; ?>
-            
-            <?php if ($success): ?>
-                <div class="success-message">
-                    ✅ <?= htmlspecialchars($success) ?>
-                </div>
-            <?php endif; ?>
 
-            <!-- 
-                ATTENTION : AUCUN ATTRIBUT HTML5 DE VALIDATION N'EST UTILISÉ !
-                - PAS de "required"
-                - PAS de "minlength"
-                - PAS de "maxlength"
-                - PAS de "pattern"
-                - PAS de "type="email""
-                - PAS de "type="date""
-                - PAS de "type="url""
-                Toute la validation est faite en PHP côté serveur !
-            -->
-            <form method="POST" action="">
-                <div class="form-group">
-                    <label>Titre de l'événement <span class="required">*</span></label>
-                    <input type="text" name="titre" 
-                           value="<?= htmlspecialchars($formData['titre']) ?>"
-                           class="<?= isset($errors['titre']) ? 'field-error' : '' ?>">
-                    <small>3 à 100 caractères (lettres, chiffres, espaces, tirets, apostrophes)</small>
-                </div>
+            <div class="form-container">
+                <div class="form-body">
+                    <form method="POST" action="">
+                        <div class="form-group">
+                            <label>Titre de l'événement <span class="required">*</span></label>
+                            <input type="text" name="titre" 
+                                   value="<?= htmlspecialchars($formData['titre']) ?>"
+                                   class="<?= isset($errors['titre']) ? 'field-error' : '' ?>">
+                            <small>3 à 100 caractères (lettres, chiffres, espaces, tirets, apostrophes)</small>
+                        </div>
 
-                <div class="form-group">
-                    <label>Description <span class="required">*</span></label>
-                    <textarea name="description" 
-                              class="<?= isset($errors['description']) ? 'field-error' : '' ?>"><?= htmlspecialchars($formData['description']) ?></textarea>
-                    <small>Minimum 10 caractères, maximum 5000 caractères</small>
-                </div>
+                        <div class="form-group">
+                            <label>Description <span class="required">*</span></label>
+                            <textarea name="description" 
+                                      class="<?= isset($errors['description']) ? 'field-error' : '' ?>"><?= htmlspecialchars($formData['description']) ?></textarea>
+                            <small>Minimum 10 caractères, maximum 5000 caractères</small>
+                        </div>
 
-                <div class="form-group">
-                    <label>Date <span class="required">*</span></label>
-                    <input type="text" name="date" 
-                           value="<?= htmlspecialchars($formData['date']) ?>" 
-                           placeholder="AAAA-MM-JJ"
-                           class="<?= isset($errors['date']) ? 'field-error' : '' ?>">
-                    <small>Format: AAAA-MM-JJ (ex: 2026-12-15) - La date ne peut pas être dans le passé</small>
-                </div>
+                        <div class="form-group">
+                            <label>Date <span class="required">*</span></label>
+                            <input type="text" name="date" 
+                                   value="<?= htmlspecialchars($formData['date']) ?>" 
+                                   placeholder="AAAA-MM-JJ"
+                                   class="<?= isset($errors['date']) ? 'field-error' : '' ?>">
+                            <small>Format: AAAA-MM-JJ (ex: 2026-12-15) - La date ne peut pas être dans le passé</small>
+                        </div>
 
-                <div class="form-group">
-                    <label>Lieu <span class="required">*</span></label>
-                    <input type="text" name="lieu" 
-                           value="<?= htmlspecialchars($formData['lieu']) ?>"
-                           class="<?= isset($errors['lieu']) ? 'field-error' : '' ?>">
-                    <small>Ex: Tunis, Sfax, Sousse, Hammamet...</small>
-                </div>
+                        <div class="form-group">
+                            <label>Lieu <span class="required">*</span></label>
+                            <input type="text" name="lieu" 
+                                   value="<?= htmlspecialchars($formData['lieu']) ?>"
+                                   class="<?= isset($errors['lieu']) ? 'field-error' : '' ?>">
+                            <small>Ex: Tunis, Sfax, Sousse, Hammamet...</small>
+                        </div>
 
-                <div class="form-group">
-                    <label>Type d'événement <span class="required">*</span></label>
-                    <select name="type" class="<?= isset($errors['type']) ? 'field-error' : '' ?>">
-                        <option value="">Sélectionnez un type</option>
-                        <option value="Atelier" <?= $formData['type'] == 'Atelier' ? 'selected' : '' ?>>🧑‍🍳 Atelier</option>
-                        <option value="Conférence" <?= $formData['type'] == 'Conférence' ? 'selected' : '' ?>>🎤 Conférence</option>
-                        <option value="Festival" <?= $formData['type'] == 'Festival' ? 'selected' : '' ?>>🎉 Festival</option>
-                        <option value="Autre" <?= $formData['type'] == 'Autre' ? 'selected' : '' ?>>📌 Autre</option>
-                    </select>
-                </div>
+                        <div class="form-group">
+                            <label>Type d'événement <span class="required">*</span></label>
+                            <select name="type" class="<?= isset($errors['type']) ? 'field-error' : '' ?>">
+                                <option value="">Sélectionnez un type</option>
+                                <option value="Atelier" <?= $formData['type'] == 'Atelier' ? 'selected' : '' ?>>🧑‍🍳 Atelier</option>
+                                <option value="Conférence" <?= $formData['type'] == 'Conférence' ? 'selected' : '' ?>>🎤 Conférence</option>
+                                <option value="Festival" <?= $formData['type'] == 'Festival' ? 'selected' : '' ?>>🎉 Festival</option>
+                                <option value="Autre" <?= $formData['type'] == 'Autre' ? 'selected' : '' ?>>📌 Autre</option>
+                            </select>
+                        </div>
 
-                <div class="form-group">
-                    <label>Organisateur <span class="required">*</span></label>
-                    <select name="organisateur_id" class="<?= isset($errors['organisateur_id']) ? 'field-error' : '' ?>">
-                        <option value="">Sélectionnez un organisateur</option>
-                        <?php foreach ($organisateurs as $org): ?>
-                            <option value="<?= $org['id'] ?>" <?= $formData['organisateur_id'] == $org['id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($org['nom']) ?> (<?= htmlspecialchars($org['email']) ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <small>Sélectionnez l'organisateur de cet événement</small>
-                </div>
+                        <div class="form-group">
+                            <label>Organisateur <span class="required">*</span></label>
+                            <select name="organisateur_id" class="<?= isset($errors['organisateur_id']) ? 'field-error' : '' ?>">
+                                <option value="">Sélectionnez un organisateur</option>
+                                <?php foreach ($organisateurs as $org): ?>
+                                    <option value="<?= $org['id'] ?>" <?= $formData['organisateur_id'] == $org['id'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($org['nom']) ?> (<?= htmlspecialchars($org['email']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small>Sélectionnez l'organisateur de cet événement</small>
+                        </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn-submit">✅ Ajouter l'événement</button>
-                    <a href="dashboardEvenement.php" class="btn-cancel">❌ Annuler</a>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">✅ Ajouter l'événement</button>
+                            <a href="dashboardEvenement.php" class="btn-cancel">❌ Annuler</a>
+                        </div>
+                    </form>
                 </div>
-            </form>
-        </div>
+            </div>
+        </main>
     </div>
 </body>
 </html>

@@ -77,20 +77,37 @@ $contactsCount = count($uniqueEmails);
             margin-bottom: 1.5rem;
         }
 
-        .sidebar-logo h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: white;
+        .sidebar-logo-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
         }
 
-        .sidebar-logo span {
+        .sidebar-logo-text h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .sidebar-logo-text span {
             color: #99f6e4;
         }
 
-        .sidebar-logo p {
-            font-size: 0.75rem;
+        .sidebar-logo-text p {
+            font-size: 0.7rem;
             opacity: 0.7;
-            margin-top: 0.5rem;
+            margin: 0;
+            margin-top: 2px;
+        }
+
+        .sidebar-logo-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            object-fit: cover;
         }
 
         .sidebar-nav {
@@ -464,8 +481,13 @@ $contactsCount = count($uniqueEmails);
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-logo">
-                <h2>Green<span>Bite</span></h2>
-                <p>Administration</p>
+                <div class="sidebar-logo-wrapper">
+                    <div class="sidebar-logo-text">
+                        <h2>Green<span>Bite</span></h2>
+                        <p>Administration</p>
+                    </div>
+                    <img src="../../assets/images/logo.png" alt="GreenBite" class="sidebar-logo-img">
+                </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboardEvenement.php" class="sidebar-link">
@@ -475,6 +497,14 @@ $contactsCount = count($uniqueEmails);
                 <a href="stats.php" class="sidebar-link">
                     <span class="icon">📈</span>
                     <span>Statistiques</span>
+                </a>
+                <a href="../front/recherche-avancee.php" class="sidebar-link">
+                    <span class="icon">🔍</span>
+                    <span>Recherche avancée</span>
+                </a>
+                <a href="participants.php" class="sidebar-link">
+                    <span class="icon">👥</span>
+                    <span>Participants</span>
                 </a>
                 <a href="organisateurs.php" class="sidebar-link active">
                     <span class="icon">👥</span>

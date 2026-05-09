@@ -1,9 +1,11 @@
 <?php
 require_once "../../controller/EvenementController.php";
+require_once "../../controller/ParticipationController.php";
 
 // ==================== VALIDATIONS PHP UNIQUEMENT ====================
 
 $controller = new EvenementController();
+$participationController = new ParticipationController();
 
 // 1. Validation et récupération de l'ID
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -30,6 +32,7 @@ $eventDescription = isset($event['description']) ? nl2br(htmlspecialchars($event
 $eventDate = isset($event['date_event']) ? $event['date_event'] : '';
 $eventLieu = isset($event['lieu']) ? htmlspecialchars($event['lieu'], ENT_QUOTES, 'UTF-8') : 'Lieu non spécifié';
 $eventType = isset($event['type']) ? htmlspecialchars($event['type'], ENT_QUOTES, 'UTF-8') : 'Autre';
+$capaciteMax = isset($event['capacite_max']) ? (int)$event['capacite_max'] : 0;
 
 // 4. Données de l'organisateur (jointure)
 $organisateurNom = isset($event['organisateur_nom']) ? htmlspecialchars($event['organisateur_nom'], ENT_QUOTES, 'UTF-8') : 'Non spécifié';
@@ -101,6 +104,12 @@ if ($isToday) {
     $statusIcon = "📅";
     $statusClass = "status-upcoming";
 }
+
+// 8. Vérifier les places disponibles (utilisation de ParticipationController)
+$inscrits = $participationController->countParticipantsByEvent($eventId);
+$placesRestantes = $capaciteMax - $inscrits;
+$complet = ($capaciteMax > 0 && $placesRestantes <= 0);
+$boutonInscription = (!$isPast && !$complet);
 ?>
 
 <!DOCTYPE html>
@@ -258,6 +267,36 @@ if ($isToday) {
             border-radius: 12px;
         }
         
+        /* Inscription Button */
+        .inscription-section {
+            text-align: center;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #f0fdf4;
+            border-radius: 20px;
+        }
+        .btn-inscription {
+            display: inline-block;
+            background: #0f766e;
+            color: white;
+            padding: 0.875rem 2rem;
+            border-radius: 9999px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .btn-inscription:hover {
+            background: #0c5f58;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(15,118,110,0.3);
+        }
+        .places-info {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        
         /* Back Link */
         .back-link {
             display: inline-flex;
@@ -360,6 +399,23 @@ if ($isToday) {
             </div>
         </div>
         <?php endif; ?>
+        
+        <!-- Section Inscription - Redirige vers participer.php -->
+        <div class="inscription-section">
+            <?php if ($isPast): ?>
+                <p style="color: #64748b;">📅 Cet événement est déjà passé</p>
+            <?php elseif ($complet): ?>
+                <p style="color: #dc2626;">❌ Désolé, cet événement est complet !</p>
+                <p class="places-info"><?= $capaciteMax ?> places maximum</p>
+            <?php else: ?>
+                <a href="participer.php?id=<?= $eventId ?>" class="btn-inscription">
+                    📝 Participer à cet événement
+                </a>
+                <?php if ($capaciteMax > 0): ?>
+                    <p class="places-info">🎟️ <?= $placesRestantes ?> places restantes sur <?= $capaciteMax ?></p>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
         
         <a href="listEvenements.php" class="back-link">← Retour aux événements</a>
     </div>

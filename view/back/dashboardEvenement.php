@@ -2,6 +2,12 @@
 session_start();
 require_once "../../controller/EvenementController.php";
 
+// Vérifier si l'utilisateur est administrateur (module user)
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header('Location: ../front/listEvenements.php');
+    exit();
+}
+
 $controller = new EvenementController();
 $events = $controller->listEvenements();
 $stats = $controller->getStats();
@@ -49,10 +55,39 @@ $typesCount = isset($stats['byType']) ? count($stats['byType']) : 0;
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
             z-index: 100;
         }
-        .sidebar-logo { padding: 2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem; }
-        .sidebar-logo h2 { font-size: 1.5rem; font-weight: 700; color: white; }
-        .sidebar-logo span { color: #99f6e4; }
-        .sidebar-logo p { font-size: 0.75rem; opacity: 0.7; margin-top: 0.5rem; }
+        .sidebar-logo { 
+            padding: 2rem 1.5rem; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            margin-bottom: 1.5rem; 
+        }
+        .sidebar-logo-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .sidebar-logo-text h2 { 
+            font-size: 1.4rem; 
+            font-weight: 700; 
+            color: white; 
+            margin: 0;
+            line-height: 1.2;
+        }
+        .sidebar-logo-text span { 
+            color: #99f6e4; 
+        }
+        .sidebar-logo-text p { 
+            font-size: 0.7rem; 
+            opacity: 0.7; 
+            margin: 0;
+            margin-top: 2px;
+        }
+        .sidebar-logo-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
         .sidebar-nav { padding: 0 1rem; }
         .sidebar-link {
             display: flex;
@@ -313,8 +348,13 @@ $typesCount = isset($stats['byType']) ? count($stats['byType']) : 0;
     <div class="dashboard-container">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-logo">
-                <h2>Green<span>Bite</span></h2>
-                <p>Administration</p>
+                <div class="sidebar-logo-wrapper">
+                    <div class="sidebar-logo-text">
+                        <h2>Green<span>Bite</span></h2>
+                        <p>Administration</p>
+                    </div>
+                    <img src="../../assets/images/logo.png" alt="GreenBite" class="sidebar-logo-img">
+                </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboardEvenement.php" class="sidebar-link active">
@@ -325,13 +365,12 @@ $typesCount = isset($stats['byType']) ? count($stats['byType']) : 0;
                     <span class="icon">📈</span>
                     <span>Statistiques</span>
                 </a>
-                <!-- NOUVEAU LIEN VERS LA RECHERCHE AVANCÉE -->
-                <a href="../front/recherche-avancee.php" class="sidebar-link">
-                    <span class="icon">🔍</span>
-                    <span>Recherche avancée</span>
+                <a href="participations.php" class="sidebar-link">
+                    <span class="icon">👥</span>
+                    <span>Participations</span>
                 </a>
                 <a href="addEvenement.php" class="sidebar-link">
-                    <span class="icon">➕</span>
+                    <span class">➕</span>
                     <span>Ajouter un événement</span>
                 </a>
                 <a href="organisateurs.php" class="sidebar-link">

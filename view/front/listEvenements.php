@@ -1,9 +1,23 @@
 <?php
+session_start();
 require_once "../../controller/EvenementController.php";
 
 // ==================== VALIDATIONS PHP UNIQUEMENT ====================
 
 $controller = new EvenementController();
+
+// Récupération des infos utilisateur (module user)
+$isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
+$userName = '';
+$userRole = '';
+
+if ($isLoggedIn) {
+    $userName = trim(($_SESSION['user']['prenom'] ?? '') . ' ' . ($_SESSION['user']['nom'] ?? ''));
+    if (empty($userName)) {
+        $userName = $_SESSION['user']['nom'] ?? 'Utilisateur';
+    }
+    $userRole = $_SESSION['user']['role'] ?? 'user';
+}
 
 // Récupération et validation des paramètres GET
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -86,10 +100,20 @@ $totalEventsCount = count($allEvents);
             color: white;
             text-decoration: none;
             letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .navbar-logo span {
             color: #ccfbf1;
+        }
+
+        .navbar-logo img {
+            height: 35px;
+            width: 35px;
+            border-radius: 8px;
+            object-fit: cover;
         }
 
         .navbar-links {
@@ -133,6 +157,14 @@ $totalEventsCount = count($allEvents);
         .nav-btn:hover {
             background: rgba(255, 255, 255, 0.25);
             transform: translateY(-2px);
+        }
+
+        .user-name {
+            color: white;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         /* Hero Section */
@@ -401,14 +433,28 @@ $totalEventsCount = count($allEvents);
 <body>
 
 <nav class="navbar">
-    <a href="listEvenements.php" class="navbar-logo">Green<span>Bite</span></a>
+    <a href="listEvenements.php" class="navbar-logo">
+        <img src="../assets/images/logo.png" alt="GreenBite">
+        <span>Green<span>Bite</span></span>
+    </a>
     <ul class="navbar-links">
         <li><a href="listEvenements.php" class="active">Événements</a></li>
-        <!-- NOUVEAU LIEN VERS LA RECHERCHE AVANCÉE -->
         <li><a href="recherche-avancee.php">🔍 Recherche avancée</a></li>
+        <li><a href="calendrier.php">📅 Calendrier</a></li>
+        <?php if ($isLoggedIn): ?>
+            <li><a href="mes-participations.php">📋 Mes participations</a></li>
+        <?php endif; ?>
     </ul>
     <div class="navbar-right">
-        <a href="../back/dashboardEvenement.php" class="nav-btn">👨‍💼 Admin</a>
+        <?php if ($isLoggedIn): ?>
+            <span class="user-name">👤 <?= htmlspecialchars($userName) ?></span>
+            <a href="../ModuleUser/Controller/auth.php?action=logout" class="nav-btn">🚪 Déconnexion</a>
+        <?php else: ?>
+            <a href="../ModuleUser/View/auth.php" class="nav-btn">🔑 Connexion</a>
+        <?php endif; ?>
+        <?php if ($userRole === 'admin'): ?>
+            <a href="../back/dashboardEvenement.php" class="nav-btn">👨‍💼 Admin</a>
+        <?php endif; ?>
     </div>
 </nav>
 
@@ -445,7 +491,6 @@ $totalEventsCount = count($allEvents);
         <a href="listEvenements.php?type=Conférence" class="filter-btn <?= $type == 'Conférence' ? 'active' : '' ?>">🎤 Conférences</a>
         <a href="listEvenements.php?type=Festival" class="filter-btn <?= $type == 'Festival' ? 'active' : '' ?>">🎉 Festivals</a>
         <a href="listEvenements.php?type=Autre" class="filter-btn <?= $type == 'Autre' ? 'active' : '' ?>">📌 Autres</a>
-        <!-- Lien vers la recherche avancée dans la barre de filtres -->
         <a href="recherche-avancee.php" class="filter-btn">🔍 Filtres avancés</a>
     </div>
 
