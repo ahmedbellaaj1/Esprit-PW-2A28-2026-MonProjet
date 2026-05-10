@@ -22,44 +22,30 @@ if ($isLoggedIn) {
 // Récupération et validation des paramètres GET
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $type = isset($_GET['type']) ? trim($_GET['type']) : '';
-$show = isset($_GET['show']) ? trim($_GET['show']) : 'upcoming';
 
-// Validation du paramètre show
-$validShow = ['upcoming', 'past', 'all'];
-if (!in_array($show, $validShow)) {
-    $show = 'upcoming';
-}
-
-// Sélection des événements selon le filtre
+// Validation du paramètre search
 if (!empty($search)) {
-    // Recherche
+    // Protection contre les injections
     $search = htmlspecialchars($search, ENT_QUOTES, 'UTF-8');
     $events = $controller->searchEvents($search);
 } 
+// Validation du paramètre type
 elseif (!empty($type) && $type != 'all') {
-    // Filtrer par type
     $validTypes = ['Atelier', 'Conférence', 'Festival', 'Autre'];
     if (in_array($type, $validTypes)) {
         $events = $controller->getEventsByType($type);
     } else {
+        // Type invalide, on redirige vers la liste par défaut
         $events = $controller->getUpcomingEvents();
     }
 } 
+// Aucun filtre, on affiche les événements à venir
 else {
-    // Filtre par statut (à venir, passé, tous)
-    if ($show == 'past') {
-        $events = $controller->getPastEvents();
-    } elseif ($show == 'all') {
-        $events = $controller->listEvenements();
-    } else {
-        $events = $controller->getUpcomingEvents();
-    }
+    $events = $controller->getUpcomingEvents();
 }
 
-// Récupération de tous les événements pour les statistiques
+// Récupération de tous les événements pour les statistiques (optionnel)
 $allEvents = $controller->listEvenements();
-$upcomingCount = count($controller->getUpcomingEvents());
-$pastCount = count($controller->getPastEvents());
 
 // Validation des événements récupérés
 if (!is_array($events)) {
@@ -113,6 +99,7 @@ $totalEventsCount = count($allEvents);
             font-weight: 700;
             color: white;
             text-decoration: none;
+            letter-spacing: -0.5px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -201,7 +188,7 @@ $totalEventsCount = count($allEvents);
             margin: 0 auto;
         }
 
-        /* Search Form */
+        /* Search Form - PAS d'attributs HTML5 */
         .search-wrapper {
             display: flex;
             max-width: 500px;
@@ -241,37 +228,6 @@ $totalEventsCount = count($allEvents);
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
-        }
-
-        /* Status Filters */
-        .status-filters {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .status-btn {
-            padding: 0.5rem 1.5rem;
-            border-radius: 9999px;
-            border: 2px solid #14b8a6;
-            background: white;
-            color: #0f766e;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .status-btn:hover, .status-btn.active {
-            background: #0f766e;
-            color: white;
-            border-color: #0f766e;
-            transform: translateY(-2px);
         }
 
         .section-heading {
@@ -471,10 +427,6 @@ $totalEventsCount = count($allEvents);
                 flex-direction: column;
                 align-items: flex-start;
             }
-            
-            .status-filters {
-                flex-wrap: wrap;
-            }
         }
     </style>
 </head>
@@ -496,9 +448,9 @@ $totalEventsCount = count($allEvents);
     <div class="navbar-right">
         <?php if ($isLoggedIn): ?>
             <span class="user-name">👤 <?= htmlspecialchars($userName) ?></span>
-            <a href="logout.php" class="nav-btn">🚪 Déconnexion</a>
+            <a href="../ModuleUser/Controller/auth.php?action=logout" class="nav-btn">🚪 Déconnexion</a>
         <?php else: ?>
-            <a href="login.php" class="nav-btn">🔑 Connexion</a>
+            <a href="../ModuleUser/View/auth.php" class="nav-btn">🔑 Connexion</a>
         <?php endif; ?>
         <?php if ($userRole === 'admin'): ?>
             <a href="../back/dashboardEvenement.php" class="nav-btn">👨‍💼 Admin</a>
@@ -510,6 +462,14 @@ $totalEventsCount = count($allEvents);
     <h1>🌱 Découvrez les événements</h1>
     <p>Participez à des activités écologiques et communautaires</p>
     
+    <!-- 
+        ATTENTION : AUCUN ATTRIBUT HTML5 DE VALIDATION N'EST UTILISÉ !
+        - PAS de "required"
+        - PAS de "minlength"
+        - PAS de "maxlength"
+        - PAS de "pattern"
+        Toute la validation est faite en PHP côté serveur !
+    -->
     <form method="GET" action="listEvenements.php" class="search-wrapper">
         <input type="text" name="search" placeholder="🔍 Rechercher un événement..." value="<?= htmlspecialchars($search) ?>">
         <button type="submit">Rechercher</button>
@@ -519,39 +479,18 @@ $totalEventsCount = count($allEvents);
 <!-- Main Content -->
 <div class="main-container">
     
-    <!-- Status Filters -->
-    <div class="status-filters">
-        <a href="?show=upcoming&type=<?= urlencode($type) ?>&search=<?= urlencode($search) ?>" class="status-btn <?= $show == 'upcoming' ? 'active' : '' ?>">
-            📅 À venir (<?= $upcomingCount ?>)
-        </a>
-        <a href="?show=past&type=<?= urlencode($type) ?>&search=<?= urlencode($search) ?>" class="status-btn <?= $show == 'past' ? 'active' : '' ?>">
-            ✅ Passés (<?= $pastCount ?>)
-        </a>
-        <a href="?show=all&type=<?= urlencode($type) ?>&search=<?= urlencode($search) ?>" class="status-btn <?= $show == 'all' ? 'active' : '' ?>">
-            📊 Tous (<?= $totalEventsCount ?>)
-        </a>
-    </div>
-
     <div class="section-heading">
-        <span>
-            <?php if ($show == 'upcoming'): ?>
-                📅 Événements à venir
-            <?php elseif ($show == 'past'): ?>
-                ✅ Événements passés
-            <?php else: ?>
-                📊 Tous les événements
-            <?php endif; ?>
-        </span>
+        <span>📅 Événements disponibles</span>
         <span class="results-count"><?= $eventsCount ?> événement(s) trouvé(s)</span>
     </div>
 
     <!-- Filter Bar -->
     <div class="filter-bar">
-        <a href="listEvenements.php?show=<?= $show ?>" class="filter-btn <?= empty($type) && empty($search) ? 'active' : '' ?>">Tous</a>
-        <a href="listEvenements.php?show=<?= $show ?>&type=Atelier" class="filter-btn <?= $type == 'Atelier' ? 'active' : '' ?>">🧑‍🍳 Ateliers</a>
-        <a href="listEvenements.php?show=<?= $show ?>&type=Conférence" class="filter-btn <?= $type == 'Conférence' ? 'active' : '' ?>">🎤 Conférences</a>
-        <a href="listEvenements.php?show=<?= $show ?>&type=Festival" class="filter-btn <?= $type == 'Festival' ? 'active' : '' ?>">🎉 Festivals</a>
-        <a href="listEvenements.php?show=<?= $show ?>&type=Autre" class="filter-btn <?= $type == 'Autre' ? 'active' : '' ?>">📌 Autres</a>
+        <a href="listEvenements.php" class="filter-btn <?= empty($type) && empty($search) ? 'active' : '' ?>">Tous</a>
+        <a href="listEvenements.php?type=Atelier" class="filter-btn <?= $type == 'Atelier' ? 'active' : '' ?>">🧑‍🍳 Ateliers</a>
+        <a href="listEvenements.php?type=Conférence" class="filter-btn <?= $type == 'Conférence' ? 'active' : '' ?>">🎤 Conférences</a>
+        <a href="listEvenements.php?type=Festival" class="filter-btn <?= $type == 'Festival' ? 'active' : '' ?>">🎉 Festivals</a>
+        <a href="listEvenements.php?type=Autre" class="filter-btn <?= $type == 'Autre' ? 'active' : '' ?>">📌 Autres</a>
         <a href="recherche-avancee.php" class="filter-btn">🔍 Filtres avancés</a>
     </div>
 
@@ -581,7 +520,6 @@ $totalEventsCount = count($allEvents);
                 $eventLieu = isset($event['lieu']) ? htmlspecialchars($event['lieu'], ENT_QUOTES, 'UTF-8') : 'Lieu non spécifié';
                 $eventDate = isset($event['date_event']) ? $event['date_event'] : '';
                 $eventType = isset($event['type']) ? $event['type'] : 'Autre';
-                $isPast = $eventDate < date('Y-m-d');
                 
                 // Formatage de la date
                 $formattedDate = '';
@@ -601,17 +539,10 @@ $totalEventsCount = count($allEvents);
                     'Festival' => '🎉',
                     default => '📌'
                 };
-                
-                // Badge passé/à venir
-                $pastBadge = '';
-                if ($isPast && $show != 'upcoming') {
-                    $pastBadge = '<span style="position: absolute; top: 10px; right: 10px; background: #64748b; color: white; padding: 2px 8px; border-radius: 20px; font-size: 10px;">Passé</span>';
-                }
             ?>
                 <div class="product-card" onclick="window.location.href='showEvenement.php?id=<?= $eventId ?>'">
                     <div class="product-img">
                         <?= $typeIcon ?>
-                        <?= $pastBadge ?>
                     </div>
                     <div class="product-body">
                         <div class="product-name"><?= $eventTitre ?></div>

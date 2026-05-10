@@ -1,12 +1,10 @@
 <?php
-// view/front/inscription.php
 session_start();
+require_once "../../controller/ParticipantController.php";
 require_once "../../controller/EvenementController.php";
-require_once "../../controller/ParticipationController.php";
-require_once "../../model/Participation.php";
 
+$participantController = new ParticipantController();
 $eventController = new EvenementController();
-$participationController = new ParticipationController();
 
 $eventId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -26,19 +24,7 @@ $error = '';
 $success = '';
 $formData = ['nom' => '', 'email' => '', 'telephone' => ''];
 
-// Vérifier si l'utilisateur est connecté
-$isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
-
-// Si connecté, pré-remplir les champs
-if ($isLoggedIn) {
-    $user = $_SESSION['user'];
-    $formData = [
-        'nom' => trim(($user['prenom'] ?? '') . ' ' . ($user['nom'] ?? '')),
-        'email' => $user['email'] ?? '',
-        'telephone' => ''
-    ];
-}
-
+// Traitement du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData = [
         'nom' => trim($_POST['nom'] ?? ''),
@@ -69,51 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($errors)) {
         try {
-            // Vérifier si l'utilisateur existe déjà dans la table users
-            // Si non, on le crée temporairement
-            $userRepoPaths = [
-                __DIR__ . "/../../ModuleUser/Controller/UserRepository.php",
-                __DIR__ . "/../../Controller/UserRepository.php",
-                __DIR__ . "/../ModuleUser/Controller/UserRepository.php"
-            ];
+            $participant = new Participant(
+                $formData['nom'],
+                $formData['email'],
+                $formData['telephone'],
+                $eventId
+            );
             
-            $userRepoFound = false;
-            foreach ($userRepoPaths as $path) {
-                if (file_exists($path)) {
-                    require_once $path;
-                    $userRepoFound = true;
-                    break;
-                }
-            }
-            
-            $userId = null;
-            
-            if ($userRepoFound) {
-                $userRepo = new UserRepository();
-                $existingUser = $userRepo->findByEmail($formData['email']);
-                
-                if ($existingUser) {
-                    $userId = $existingUser->getId();
-                } else {
-                    // Créer un utilisateur temporaire
-                    $sql = "INSERT INTO users (nom, prenom, email, role, statut) 
-                            VALUES (:nom, '', :email, 'participant', 'actif')";
-                    $db = config::getConnexion();
-                    $query = $db->prepare($sql);
-                    $query->execute([
-                        'nom' => $formData['nom'],
-                        'email' => $formData['email']
-                    ]);
-                    $userId = $db->lastInsertId();
-                }
-            } else {
-                // Fallback: utiliser l'email comme identifiant
-                $userId = null;
-            }
-            
-            // Créer la participation
-            $participation = new Participation($eventId, $userId);
-            $result = $participationController->addParticipation($participation);
+            $result = $participantController->addParticipant($participant);
             
             if ($result['success']) {
                 $success = $result['message'];
@@ -133,8 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$inscrits = $participationController->countParticipantsByEvent($eventId);
+// Vérifier les places disponibles
 $capaciteMax = $event['capacite_max'] ?? 0;
+$inscrits = $participantController->countParticipantsByEvent($eventId);
 $placesRestantes = $capaciteMax - $inscrits;
 $complet = ($capaciteMax > 0 && $placesRestantes <= 0);
 ?>
@@ -149,7 +99,7 @@ $complet = ($capaciteMax > 0 && $placesRestantes <= 0);
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             background: linear-gradient(135deg, #f0fdfa 0%, #e6f7f5 100%);
             min-height: 100vh;
             padding: 2rem;
@@ -164,22 +114,8 @@ $complet = ($capaciteMax > 0 && $placesRestantes <= 0);
             margin-bottom: 2rem;
             border-radius: 16px;
         }
-        .navbar-logo {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: white;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .navbar-logo { font-size: 1.6rem; font-weight: 700; color: white; text-decoration: none; }
         .navbar-logo span { color: #ccfbf1; }
-        .navbar-logo img {
-            height: 35px;
-            width: 35px;
-            border-radius: 8px;
-            object-fit: cover;
-        }
         .nav-btn {
             background: rgba(255,255,255,0.15);
             color: white;
@@ -224,28 +160,20 @@ $complet = ($capaciteMax > 0 && $placesRestantes <= 0);
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s;
         }
-        .btn-submit:hover { background: #0c5f58; }
+        .btn-submit:hover { background: #0c5f58; transform: translateY(-2px); }
         .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; }
-        .error-message { background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border-left: 4px solid #dc2626; }
-        .success-message { background: #dcfce7; color: #166534; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border-left: 4px solid #16a34a; }
+        .error-message { background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; }
+        .success-message { background: #dcfce7; color: #166534; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; }
         .back-link { display: inline-block; margin-top: 1rem; color: #0f766e; text-decoration: none; }
         small { display: block; margin-top: 0.25rem; color: #64748b; font-size: 0.7rem; }
-        
-        @media (max-width: 640px) {
-            body { padding: 1rem; }
-            .container { padding: 1.5rem; }
-            .navbar { flex-direction: column; height: auto; gap: 0.5rem; padding: 1rem; }
-        }
     </style>
 </head>
 <body>
 
 <nav class="navbar">
-    <a href="listEvenements.php" class="navbar-logo">
-        <img src="../assets/images/logo.png" alt="GreenBite">
-        <span>Green<span>Bite</span></span>
-    </a>
+    <a href="listEvenements.php" class="navbar-logo">Green<span>Bite</span></a>
     <a href="../back/dashboardEvenement.php" class="nav-btn">👨‍💼 Admin</a>
 </nav>
 
@@ -268,11 +196,7 @@ $complet = ($capaciteMax > 0 && $placesRestantes <= 0);
         <div class="success-message">
             ✅ <?= htmlspecialchars($success) ?>
             <br><br>
-            <?php if ($isLoggedIn): ?>
-                <a href="mes-participations.php" style="color: #166534;">📋 Voir mes participations →</a>
-            <?php else: ?>
-                <a href="showEvenement.php?id=<?= $eventId ?>" style="color: #166534;">← Retour à l'événement</a>
-            <?php endif; ?>
+            <a href="showEvenement.php?id=<?= $eventId ?>" style="color: #166534;">← Retour à l'événement</a>
         </div>
     <?php elseif ($complet): ?>
         <div class="error-message">❌ Désolé, cet événement est complet !</div>
