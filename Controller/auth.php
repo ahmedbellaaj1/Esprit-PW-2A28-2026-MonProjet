@@ -7,7 +7,7 @@ require_once __DIR__ . '/UserRepository.php';
 require_once __DIR__ . '/../Model/User.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 }
 
 $action = $_POST['action'] ?? '';
@@ -21,7 +21,7 @@ $userRepository = new UserRepository();
 function redirectWithFormState(string $tab, array $errors, array $oldInput = []): void
 {
     setFormState($tab, $errors, $oldInput);
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 }
 
 try {
@@ -143,7 +143,7 @@ try {
             
             setFlash('error', 'Email et mot de passe sont obligatoires.');
             setFormState('login-panel', $errors, ['email' => $email]);
-            redirect('/projetwebnova/View/auth.php');
+            redirect('/Green-Bite/View/auth.php');
         }
 
         $user = $userRepository->findByEmail($email);
@@ -154,7 +154,7 @@ try {
                 'email' => 'Identifiants invalides.',
                 'mot_de_passe' => 'Identifiants invalides.',
             ], ['email' => $email]);
-            redirect('/projetwebnova/View/auth.php');
+            redirect('/Green-Bite/View/auth.php');
         }
 
         if ($user->getStatut() !== 'actif') {
@@ -163,7 +163,7 @@ try {
                 'email' => 'Votre compte est inactif ou suspendu.',
                 'mot_de_passe' => 'Votre compte est inactif ou suspendu.',
             ], ['email' => $email]);
-            redirect('/projetwebnova/View/auth.php');
+            redirect('/Green-Bite/View/auth.php');
         }
 
         $_SESSION['user'] = [
@@ -177,16 +177,16 @@ try {
         setFlash('success', 'Connexion reussie.');
 
         if ($user->getRole() === 'admin') {
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
-        redirect('/projetwebnova/View/front-office/profile.php');
+        redirect('/Green-Bite/View/front-office/index.php');
     }
 
     if ($action === 'logout') {
         unset($_SESSION['user']);
         setFlash('success', 'Vous etes deconnecte.');
-        redirect('/projetwebnova/View/auth.php');
+        redirect('/Green-Bite/View/auth.php');
     }
 
     if ($action === 'request-password-reset') {
@@ -222,7 +222,7 @@ try {
         }
 
         setFlash('success', 'Un email de reinitialisation a ete envoye a votre adresse email.');
-        redirect('/projetwebnova/View/auth.php');
+        redirect('/Green-Bite/View/auth.php');
     }
 
     if ($action === 'reset-password') {
@@ -239,7 +239,7 @@ try {
 
         if ($email === null) {
             setFlash('error', 'Le lien de reinitialisation est invalide ou a expire.');
-            redirect('/projetwebnova/View/auth.php');
+            redirect('/Green-Bite/View/auth.php');
         }
 
         if ($password === '' || $passwordConfirm === '') {
@@ -249,14 +249,14 @@ try {
 
             setFlash('error', 'Veuillez corriger les champs signales.');
             setFormState('reset-password-panel', $errors);
-            redirect('/projetwebnova/View/auth.php?token=' . urlencode($token));
+            redirect('/Green-Bite/View/auth.php?token=' . urlencode($token));
         }
 
         if ($password !== $passwordConfirm) {
             $errors['mot_de_passe_confirm'] = 'Les mots de passe ne correspondent pas.';
             setFlash('error', 'Les mots de passe ne correspondent pas.');
             setFormState('reset-password-panel', $errors);
-            redirect('/projetwebnova/View/auth.php?token=' . urlencode($token));
+            redirect('/Green-Bite/View/auth.php?token=' . urlencode($token));
         }
 
         $user = $userRepository->findByEmail($email);
@@ -271,12 +271,12 @@ try {
         deletePasswordResetToken($token);
 
         setFlash('success', 'Votre mot de passe a ete reinitialise avec succes. Veuillez vous connecter.');
-        redirect('/projetwebnova/View/auth.php');
+        redirect('/Green-Bite/View/auth.php');
     }
 
     setFlash('error', 'Action non supportee.');
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 } catch (Throwable $e) {
     setFlash('error', 'Erreur serveur: ' . $e->getMessage());
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 }

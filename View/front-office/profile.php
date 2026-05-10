@@ -13,7 +13,7 @@ $currentUser = $userRepository->findById((int) $_SESSION['user']['id']);
 if ($currentUser === null) {
     unset($_SESSION['user']);
     setFlash('error', 'Utilisateur introuvable.');
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 }
 
 $flash = getFlash();
@@ -26,7 +26,7 @@ if (!empty($currentUser->getPhoto())) {
     $photoPath = __DIR__ . '/../../uploads/users/' . $photoFile;
 
     if (is_file($photoPath)) {
-        $photoUrl = '/projetwebnova/uploads/users/' . rawurlencode($photoFile);
+        $photoUrl = '/Green-Bite/uploads/users/' . rawurlencode($photoFile);
     }
 }
 ?>
@@ -40,7 +40,7 @@ if (!empty($currentUser->getPhoto())) {
 </head>
 <body>
     <nav class="navbar">
-        <a class="navbar-logo" href="/projetwebnova/View/front-office/profile.php">
+        <a class="navbar-logo" href="/Green-Bite/View/front-office/profile.php">
             <img src="../../uploads/logo.png" alt="GreenBite Logo" class="navbar-logo-img">
             <span class="navbar-logo-text">Green<span>Bite</span></span>
         </a>

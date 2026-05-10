@@ -33,7 +33,7 @@ $initials = strtoupper(substr((string) $sessionUser['prenom'], 0, 1) . substr((s
                 <a class="sidebar-link" href="#"><span class="icon">📊</span> Vue d ensemble</a>
                 <a class="sidebar-link" href="#"><span class="icon">🛒</span> Produits</a>
                 <a class="sidebar-link" href="#"><span class="icon">⭐</span> Evaluations</a>
-                <a class="sidebar-link active" href="/projetwebnova/View/back-office/users.php"><span class="icon">👥</span> Utilisateurs</a>
+                <a class="sidebar-link active" href="/Green-Bite/View/back-office/users.php"><span class="icon">👥</span> Utilisateurs</a>
                 <a class="sidebar-link" href="#"><span class="icon">🍽️</span> Recettes</a>
                 <a class="sidebar-link" href="#"><span class="icon">🎁</span> Dons</a>
                 <a class="sidebar-link" href="#"><span class="icon">📍</span> Magasins</a>

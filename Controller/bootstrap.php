@@ -16,11 +16,13 @@ if (file_exists(__DIR__ . '/../.env')) {
     }
 }
 
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
+
+// ========== URL / BASE HELPERS ==========
 
 function getBaseUrl(): string
 {
@@ -32,8 +34,10 @@ function getBaseUrl(): string
 function getEmailBaseUrl(): string
 {
     // Email links should always use the public ngrok URL so they work on any device
-    return 'https://valuables-baguette-sandbar.ngrok-free.dev';
+    return $_ENV['EMAIL_BASE_URL'] ?? getBaseUrl();
 }
+
+// ========== REDIRECT & FLASH ==========
 
 function redirect(string $path): void
 {
@@ -47,6 +51,18 @@ function setFlash(string $type, string $message): void
         'type' => $type,
         'message' => $message,
     ];
+}
+
+function getFlash(): ?array
+{
+    if (!isset($_SESSION['flash'])) {
+        return null;
+    }
+
+    $flash = $_SESSION['flash'];
+    unset($_SESSION['flash']);
+
+    return $flash;
 }
 
 function setFormState(string $tab, array $errors = [], array $oldInput = []): void
@@ -78,23 +94,20 @@ function consumeFormState(): array
     ];
 }
 
-function getFlash(): ?array
+// ========== HTML HELPER ==========
+
+function h(?string $value): string
 {
-    if (!isset($_SESSION['flash'])) {
-        return null;
-    }
-
-    $flash = $_SESSION['flash'];
-    unset($_SESSION['flash']);
-
-    return $flash;
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
+
+// ========== AUTH HELPERS ==========
 
 function requireAuth(): void
 {
     if (!isset($_SESSION['user'])) {
         setFlash('error', 'Veuillez vous connecter.');
-        redirect('/projetwebnova/View/auth.php');
+        redirect('/Green-Bite/View/auth.php');
     }
 }
 
@@ -104,9 +117,36 @@ function requireAdmin(): void
 
     if (($_SESSION['user']['role'] ?? '') !== 'admin') {
         setFlash('error', 'Acces reserve a un administrateur.');
-        redirect('/projetwebnova/View/front-office/profile.php');
+        redirect('/Green-Bite/View/front-office/profile.php');
     }
 }
+
+/**
+ * Get the currently logged-in user's ID from the session.
+ * Returns 0 if not logged in.
+ */
+function getLoggedUserId(): int
+{
+    return (int) ($_SESSION['user']['id'] ?? 0);
+}
+
+/**
+ * Check if user is logged in.
+ */
+function isLoggedIn(): bool
+{
+    return isset($_SESSION['user']) && !empty($_SESSION['user']['id']);
+}
+
+/**
+ * Get current user session data.
+ */
+function getCurrentUser(): ?array
+{
+    return $_SESSION['user'] ?? null;
+}
+
+// ========== VALIDATION HELPERS ==========
 
 function isValidPersonName(string $value): bool
 {
@@ -151,12 +191,14 @@ function isStrongPassword(string $password): array
     }
     
     // Check for at least one special character
-    if (!preg_match('/[!@#$%^&*()_+\-=\[\]{};:\'",.<>?\/\\|`~]/', $password)) {
+    if (!preg_match('/[!@#$%^&*()_+\-=\[\]{};:\'",.<>?\/\\\\|`~]/', $password)) {
         $errors[] = 'Le mot de passe doit contenir au moins un caractere special (!@#$%^&*).';
     }
     
     return $errors;
 }
+
+// ========== PHOTO UPLOAD ==========
 
 function storeUploadedUserPhoto(array $file): ?string
 {
@@ -227,6 +269,8 @@ function storeUploadedUserPhoto(array $file): ?string
     return $photoName;
 }
 
+// ========== TOKEN MANAGEMENT ==========
+
 function generatePasswordResetToken(): string
 {
     return bin2hex(random_bytes(32));
@@ -237,11 +281,9 @@ function savePasswordResetToken(string $email, string $token, int $expirationHou
     $pdo = getPdo();
     $expiresAt = new DateTime("+{$expirationHours} hours");
     
-    // Delete old tokens for this email
     $stmt = $pdo->prepare('DELETE FROM password_resets WHERE email = :email');
     $stmt->execute(['email' => $email]);
     
-    // Save new token
     $stmt = $pdo->prepare('INSERT INTO password_resets (email, token, expires_at) VALUES (:email, :token, :expires_at)');
     $stmt->execute([
         'email' => $email,
@@ -277,11 +319,9 @@ function saveEmailVerification(string $email, string $token, string $nom, string
     $pdo = getPdo();
     $expiresAt = new DateTime("+{$expirationHours} hours");
     
-    // Delete old verifications for this email
     $stmt = $pdo->prepare('DELETE FROM email_verifications WHERE email = :email');
     $stmt->execute(['email' => $email]);
     
-    // Save new verification
     $stmt = $pdo->prepare(
         'INSERT INTO email_verifications (email, token, nom, prenom, mot_de_passe, photo, role, statut, expires_at) 
          VALUES (:email, :token, :nom, :prenom, :mot_de_passe, :photo, :role, :statut, :expires_at)'
@@ -321,13 +361,15 @@ function deleteEmailVerificationToken(string $token): void
     $stmt->execute(['token' => $token]);
 }
 
+// ========== EMAIL FUNCTIONS ==========
+
 function sendPasswordResetEmail(string $email, string $resetToken): bool
 {
     $baseUrl = getEmailBaseUrl();
-    $resetUrl = $baseUrl . '/projetwebnova/View/auth.php?token=' . urlencode($resetToken);
+    $resetUrl = $baseUrl . '/Green-Bite/View/auth.php?token=' . urlencode($resetToken);
     
-    $gmailAddress = 'rayenrourou1919@gmail.com';
-    $gmailAppPassword = 'ndvsxsdzlkgzfxui';
+    $gmailAddress = $_ENV['SMTP_EMAIL'] ?? 'rayenrourou1919@gmail.com';
+    $gmailAppPassword = $_ENV['SMTP_PASSWORD'] ?? 'ndvsxsdzlkgzfxui';
     
     $to = $email;
     $subject = 'Reinitialisation de votre mot de passe - GreenBite';
@@ -339,10 +381,38 @@ function sendPasswordResetEmail(string $email, string $resetToken): bool
     $message .= "Ce lien expirera dans 24 heures.\n\n";
     $message .= "Si vous n'avez pas demande cette reinitialisation, veuillez ignorer ce message.\n\n";
     $message .= "Cordialement,\n";
-    $message .= "L'equipe AppNova";
+    $message .= "L'equipe GreenBite";
     
-    $headers = "From: AppNova <" . $gmailAddress . ">\r\n";
-    $headers .= "Reply-To: AppNova <" . $gmailAddress . ">\r\n";
+    return sendSmtpEmail($gmailAddress, $gmailAppPassword, $to, $subject, $message);
+}
+
+function sendEmailVerificationEmail(string $email, string $verificationToken): bool
+{
+    $baseUrl = getEmailBaseUrl();
+    $verificationUrl = $baseUrl . '/Green-Bite/Controller/verify-email.php?token=' . urlencode($verificationToken);
+    
+    $gmailAddress = $_ENV['SMTP_EMAIL'] ?? 'rayenrourou1919@gmail.com';
+    $gmailAppPassword = $_ENV['SMTP_PASSWORD'] ?? 'ndvsxsdzlkgzfxui';
+    
+    $to = $email;
+    $subject = 'Confirmez votre email - GreenBite';
+    
+    $message = "Bonjour,\n\n";
+    $message .= "Merci de vous etre inscrit sur GreenBite!\n\n";
+    $message .= "Cliquez sur le lien ci-dessous pour confirmer votre adresse email et activer votre compte :\n";
+    $message .= $verificationUrl . "\n\n";
+    $message .= "Ce lien expirera dans 24 heures.\n\n";
+    $message .= "Si vous n'avez pas cree ce compte, veuillez ignorer ce message.\n\n";
+    $message .= "Cordialement,\n";
+    $message .= "L'equipe GreenBite";
+    
+    return sendSmtpEmail($gmailAddress, $gmailAppPassword, $to, $subject, $message);
+}
+
+function sendSmtpEmail(string $fromEmail, string $appPassword, string $to, string $subject, string $message): bool
+{
+    $headers = "From: GreenBite <" . $fromEmail . ">\r\n";
+    $headers .= "Reply-To: GreenBite <" . $fromEmail . ">\r\n";
     $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
     
@@ -353,21 +423,14 @@ function sendPasswordResetEmail(string $email, string $resetToken): bool
     $logFile = $logDir . '/email_debug.log';
     
     try {
-        error_log('[' . date('Y-m-d H:i:s') . '] Tentative d envoi email a: ' . $to, 3, $logFile);
-        error_log('[' . date('Y-m-d H:i:s') . '] URL de reinitialisation: ' . $resetUrl, 3, $logFile);
-        
         $smtp = fsockopen('ssl://smtp.gmail.com', 465, $errno, $errstr, 30);
         
         if (!$smtp) {
-            $error = "Connexion SMTP echouee: [$errno] $errstr";
-            error_log('[' . date('Y-m-d H:i:s') . '] ' . $error, 3, $logFile);
+            error_log('[' . date('Y-m-d H:i:s') . '] Connexion SMTP echouee: [' . $errno . '] ' . $errstr, 3, $logFile);
             return false;
         }
         
-        error_log('[' . date('Y-m-d H:i:s') . '] Connexion SMTP etablie', 3, $logFile);
-        
-        // Helper function to read full SMTP response (handles multi-line)
-        $readResponse = function($handle) use ($logFile) {
+        $readResponse = function($handle) {
             $response = '';
             while ($line = fgets($handle)) {
                 $response .= $line;
@@ -378,69 +441,41 @@ function sendPasswordResetEmail(string $email, string $resetToken): bool
             return $response;
         };
         
-        // Read SMTP greeting
         $response = $readResponse($smtp);
-        error_log('[' . date('Y-m-d H:i:s') . '] GREETING: ' . trim($response), 3, $logFile);
-        
-        // Send EHLO
         fwrite($smtp, "EHLO localhost\r\n");
         $response = $readResponse($smtp);
-        error_log('[' . date('Y-m-d H:i:s') . '] EHLO Response: ' . trim($response), 3, $logFile);
         
-        // AUTH LOGIN
         fwrite($smtp, "AUTH LOGIN\r\n");
         $response = $readResponse($smtp);
-        error_log('[' . date('Y-m-d H:i:s') . '] AUTH LOGIN Response: ' . trim($response), 3, $logFile);
         
         if (strpos($response, '334') === false) {
-            error_log('[' . date('Y-m-d H:i:s') . '] AUTH LOGIN failed - expected 334', 3, $logFile);
             fwrite($smtp, "QUIT\r\n");
             fclose($smtp);
             return false;
         }
         
-        // Send username (base64 encoded)
-        fwrite($smtp, base64_encode($gmailAddress) . "\r\n");
+        fwrite($smtp, base64_encode($fromEmail) . "\r\n");
         $response = $readResponse($smtp);
-        error_log('[' . date('Y-m-d H:i:s') . '] Username Response: ' . trim($response), 3, $logFile);
         
-        if (strpos($response, '334') === false) {
-            error_log('[' . date('Y-m-d H:i:s') . '] Username response failed - expected 334', 3, $logFile);
-            fwrite($smtp, "QUIT\r\n");
-            fclose($smtp);
-            return false;
-        }
-        
-        // Send password (base64 encoded)
-        fwrite($smtp, base64_encode($gmailAppPassword) . "\r\n");
+        fwrite($smtp, base64_encode($appPassword) . "\r\n");
         $response = $readResponse($smtp);
-        error_log('[' . date('Y-m-d H:i:s') . '] Password Response: ' . trim($response), 3, $logFile);
         
         if (strpos($response, '235') === false) {
-            error_log('[' . date('Y-m-d H:i:s') . '] Authentication failed - expected 235, got: ' . trim($response), 3, $logFile);
+            error_log('[' . date('Y-m-d H:i:s') . '] Authentication failed', 3, $logFile);
             fwrite($smtp, "QUIT\r\n");
             fclose($smtp);
             return false;
         }
         
-        error_log('[' . date('Y-m-d H:i:s') . '] Authentication successful', 3, $logFile);
-        
-        // MAIL FROM
-        fwrite($smtp, "MAIL FROM: <" . $gmailAddress . ">\r\n");
+        fwrite($smtp, "MAIL FROM: <" . $fromEmail . ">\r\n");
         $response = $readResponse($smtp);
-        error_log('[' . date('Y-m-d H:i:s') . '] MAIL FROM Response: ' . trim($response), 3, $logFile);
         
-        // RCPT TO
         fwrite($smtp, "RCPT TO: <" . $to . ">\r\n");
         $response = $readResponse($smtp);
-        error_log('[' . date('Y-m-d H:i:s') . '] RCPT TO Response: ' . trim($response), 3, $logFile);
         
-        // DATA
         fwrite($smtp, "DATA\r\n");
         $response = $readResponse($smtp);
-        error_log('[' . date('Y-m-d H:i:s') . '] DATA Response: ' . trim($response), 3, $logFile);
         
-        // Send headers and body
         $fullMessage = "To: " . $to . "\r\n";
         $fullMessage .= "Subject: " . $subject . "\r\n";
         $fullMessage .= $headers . "\r\n";
@@ -448,9 +483,7 @@ function sendPasswordResetEmail(string $email, string $resetToken): bool
         
         fwrite($smtp, $fullMessage . "\r\n.\r\n");
         $response = $readResponse($smtp);
-        error_log('[' . date('Y-m-d H:i:s') . '] Message Response: ' . trim($response), 3, $logFile);
         
-        // QUIT
         fwrite($smtp, "QUIT\r\n");
         fclose($smtp);
         
@@ -458,108 +491,6 @@ function sendPasswordResetEmail(string $email, string $resetToken): bool
         return true;
     } catch (Throwable $e) {
         error_log('[' . date('Y-m-d H:i:s') . '] Exception: ' . $e->getMessage(), 3, $logFile);
-        return false;
-    }
-}
-
-function sendEmailVerificationEmail(string $email, string $verificationToken): bool
-{
-    $baseUrl = getEmailBaseUrl();
-    $verificationUrl = $baseUrl . '/projetwebnova/Controller/verify-email.php?token=' . urlencode($verificationToken);
-    
-    $gmailAddress = 'rayenrourou1919@gmail.com';
-    $gmailAppPassword = 'ndvsxsdzlkgzfxui';
-    
-    $to = $email;
-    $subject = 'Confirmez votre email - AppNova';
-    
-    $message = "Bonjour,\n\n";
-    $message .= "Merci de vous etre inscrit sur AppNova!\n\n";
-    $message .= "Cliquez sur le lien ci-dessous pour confirmer votre adresse email et activer votre compte :\n";
-    $message .= $verificationUrl . "\n\n";
-    $message .= "Ce lien expirera dans 24 heures.\n\n";
-    $message .= "Si vous n'avez pas cree ce compte, veuillez ignorer ce message.\n\n";
-    $message .= "Cordialement,\n";
-    $message .= "L'equipe AppNova";
-    
-    $headers = "From: AppNova <" . $gmailAddress . ">\r\n";
-    $headers .= "Reply-To: AppNova <" . $gmailAddress . ">\r\n";
-    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $headers .= "MIME-Version: 1.0\r\n";
-    
-    $logDir = __DIR__ . '/../uploads';
-    if (!is_dir($logDir)) {
-        mkdir($logDir, 0777, true);
-    }
-    $logFile = $logDir . '/email_debug.log';
-    
-    try {
-        error_log('[' . date('Y-m-d H:i:s') . '] Tentative d envoi email de verification a: ' . $to, 3, $logFile);
-        error_log('[' . date('Y-m-d H:i:s') . '] URL de verification: ' . $verificationUrl, 3, $logFile);
-        
-        $smtp = fsockopen('ssl://smtp.gmail.com', 465, $errno, $errstr, 30);
-        
-        if (!$smtp) {
-            $error = "Connexion SMTP echouee: [$errno] $errstr";
-            error_log('[' . date('Y-m-d H:i:s') . '] ' . $error, 3, $logFile);
-            return false;
-        }
-        
-        $readResponse = function($handle) use ($logFile) {
-            $response = '';
-            while ($line = fgets($handle)) {
-                $response .= $line;
-                if (substr($line, 3, 1) !== '-') {
-                    break;
-                }
-            }
-            return $response;
-        };
-        
-        $response = $readResponse($smtp);
-        fwrite($smtp, "EHLO localhost\r\n");
-        $response = $readResponse($smtp);
-        
-        fwrite($smtp, "AUTH LOGIN\r\n");
-        $response = $readResponse($smtp);
-        
-        fwrite($smtp, base64_encode($gmailAddress) . "\r\n");
-        $response = $readResponse($smtp);
-        
-        fwrite($smtp, base64_encode($gmailAppPassword) . "\r\n");
-        $response = $readResponse($smtp);
-        
-        if (strpos($response, '235') === false) {
-            error_log('[' . date('Y-m-d H:i:s') . '] Authentication failed for verification email', 3, $logFile);
-            fwrite($smtp, "QUIT\r\n");
-            fclose($smtp);
-            return false;
-        }
-        
-        fwrite($smtp, "MAIL FROM: <" . $gmailAddress . ">\r\n");
-        $response = $readResponse($smtp);
-        
-        fwrite($smtp, "RCPT TO: <" . $to . ">\r\n");
-        $response = $readResponse($smtp);
-        
-        fwrite($smtp, "DATA\r\n");
-        $response = $readResponse($smtp);
-        
-        $fullMessage = "To: " . $to . "\r\n";
-        $fullMessage .= "Subject: " . $subject . "\r\n";
-        $fullMessage .= $headers . "\r\n";
-        $fullMessage .= $message;
-        
-        fwrite($smtp, $fullMessage . "\r\n.\r\n");
-        $response = $readResponse($smtp);
-        
-        fwrite($smtp, "QUIT\r\n");
-        fclose($smtp);
-        
-        error_log('[' . date('Y-m-d H:i:s') . '] Email de verification envoye avec succes a: ' . $to, 3, $logFile);
-        return true;
-    } catch (Throwable $e) {
-        error_log('[' . date('Y-m-d H:i:s') . '] Exception (verification): ' . $e->getMessage(), 3, $logFile);
         return false;
     }
 }

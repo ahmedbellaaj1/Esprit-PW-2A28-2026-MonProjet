@@ -7,7 +7,7 @@ require_once __DIR__ . '/UserRepository.php';
 require_once __DIR__ . '/../Model/User.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 }
 
 $action = $_POST['action'] ?? '';
@@ -23,7 +23,7 @@ try {
         if ($currentUser === null) {
             unset($_SESSION['user']);
             setFlash('error', 'Session invalide, reconnectez-vous.');
-            redirect('/projetwebnova/View/auth.php');
+            redirect('/Green-Bite/View/auth.php');
         }
 
         $nom = trim($_POST['nom'] ?? '');
@@ -33,23 +33,23 @@ try {
 
         if ($nom === '' || $prenom === '' || $email === '') {
             setFlash('error', 'Nom, prenom et email sont obligatoires.');
-            redirect('/projetwebnova/View/front-office/profile.php');
+            redirect('/Green-Bite/View/front-office/profile.php');
         }
 
         if (!isValidPersonName($nom) || !isValidPersonName($prenom)) {
             setFlash('error', 'Nom et prenom doivent contenir uniquement des lettres.');
-            redirect('/projetwebnova/View/front-office/profile.php');
+            redirect('/Green-Bite/View/front-office/profile.php');
         }
 
         if (!isValidEmailAddress($email)) {
             setFlash('error', 'Adresse email invalide.');
-            redirect('/projetwebnova/View/front-office/profile.php');
+            redirect('/Green-Bite/View/front-office/profile.php');
         }
 
         $otherUser = $userRepository->findByEmail($email);
         if ($otherUser !== null && (int) $otherUser->getId() !== $currentUserId) {
             setFlash('error', 'Cet email est deja utilise par un autre compte.');
-            redirect('/projetwebnova/View/front-office/profile.php');
+            redirect('/Green-Bite/View/front-office/profile.php');
         }
 
         $photoName = $currentUser->getPhoto();
@@ -92,7 +92,7 @@ try {
         ];
 
         setFlash('success', 'Profil mis a jour.');
-        redirect('/projetwebnova/View/front-office/profile.php');
+        redirect('/Green-Bite/View/front-office/profile.php');
     }
 
     if ($action === 'create_user') {
@@ -107,22 +107,22 @@ try {
 
         if ($nom === '' || $prenom === '' || $email === '' || $password === '') {
             setFlash('error', 'Les champs de creation utilisateur sont incomplets.');
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
         if (!isValidPersonName($nom) || !isValidPersonName($prenom)) {
             setFlash('error', 'Nom et prenom doivent contenir uniquement des lettres.');
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
         if (!isValidEmailAddress($email)) {
             setFlash('error', 'Adresse email invalide. Le caractere @ est obligatoire.');
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
         if ($userRepository->findByEmail($email) !== null) {
             setFlash('error', 'Email deja utilise.');
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
         $newUser = new User(
@@ -139,7 +139,7 @@ try {
         $userRepository->create($newUser);
 
         setFlash('success', 'Utilisateur ajoute.');
-        redirect('/projetwebnova/View/back-office/users.php');
+        redirect('/Green-Bite/View/back-office/users.php');
     }
 
     if ($action === 'update_user') {
@@ -154,23 +154,23 @@ try {
 
         if ($id <= 0 || $nom === '' || $prenom === '' || $email === '') {
             setFlash('error', 'Donnees invalides pour la mise a jour.');
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
         if (!isValidPersonName($nom) || !isValidPersonName($prenom)) {
             setFlash('error', 'Nom et prenom doivent contenir uniquement des lettres.');
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
         if (!isValidEmailAddress($email)) {
             setFlash('error', 'Adresse email invalide. Le caractere @ est obligatoire.');
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
         $otherUser = $userRepository->findByEmail($email);
         if ($otherUser !== null && (int) $otherUser->getId() !== $id) {
             setFlash('error', 'Email deja utilise par un autre utilisateur.');
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
         $adminUpdatedUser = new User(
@@ -187,7 +187,7 @@ try {
         $userRepository->updateByAdmin($adminUpdatedUser);
 
         setFlash('success', 'Utilisateur mis a jour.');
-        redirect('/projetwebnova/View/back-office/users.php');
+        redirect('/Green-Bite/View/back-office/users.php');
     }
 
     if ($action === 'delete_user') {
@@ -196,23 +196,23 @@ try {
         $id = (int) ($_POST['id'] ?? 0);
         if ($id <= 0) {
             setFlash('error', 'ID utilisateur invalide.');
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
         if ($id === (int) $_SESSION['user']['id']) {
             setFlash('error', 'Suppression de votre propre compte admin interdite.');
-            redirect('/projetwebnova/View/back-office/users.php');
+            redirect('/Green-Bite/View/back-office/users.php');
         }
 
         $userRepository->delete($id);
 
         setFlash('success', 'Utilisateur supprime.');
-        redirect('/projetwebnova/View/back-office/users.php');
+        redirect('/Green-Bite/View/back-office/users.php');
     }
 
     setFlash('error', 'Action non reconnue.');
-    redirect('/projetwebnova/View/back-office/users.php');
+    redirect('/Green-Bite/View/back-office/users.php');
 } catch (Throwable $e) {
     setFlash('error', 'Erreur serveur: ' . $e->getMessage());
-    redirect('/projetwebnova/View/back-office/users.php');
+    redirect('/Green-Bite/View/back-office/users.php');
 }

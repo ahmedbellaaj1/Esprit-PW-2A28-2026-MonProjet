@@ -11,7 +11,7 @@ $state = $_GET['state'] ?? null;
 
 if ($code === null) {
     setFlash('error', 'Erreur lors de la connexion avec Google.');
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 }
 
 try {
@@ -23,7 +23,7 @@ try {
         'code' => $code,
         'client_id' => getGoogleClientId(),
         'client_secret' => getGoogleClientSecret(),
-        'redirect_uri' => $baseUrl . '/projetwebnova/Controller/google-callback.php',
+        'redirect_uri' => $baseUrl . '/Green-Bite/Controller/google-callback.php',
         'grant_type' => 'authorization_code',
     ];
     
@@ -103,7 +103,7 @@ try {
     // Check if account is active
     if ($user->getStatut() !== 'actif') {
         setFlash('error', 'Votre compte est inactif ou suspendu.');
-        redirect('/projetwebnova/View/auth.php');
+        redirect('/Green-Bite/View/auth.php');
     }
     
     // Login the user
@@ -118,12 +118,12 @@ try {
     setFlash('success', 'Connexion reussie avec Google!');
     
     if ($user->getRole() === 'admin') {
-        redirect('/projetwebnova/View/back-office/users.php');
+        redirect('/Green-Bite/View/back-office/users.php');
     }
     
-    redirect('/projetwebnova/View/front-office/profile.php');
+    redirect('/Green-Bite/View/front-office/profile.php');
     
 } catch (Throwable $e) {
     setFlash('error', 'Erreur lors de la connexion: ' . $e->getMessage());
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 }

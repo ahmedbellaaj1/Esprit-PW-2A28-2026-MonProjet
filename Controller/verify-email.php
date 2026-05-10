@@ -11,7 +11,7 @@ $userRepository = new UserRepository();
 
 if ($token === '') {
     setFlash('error', 'Token de verification invalide.');
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 }
 
 try {
@@ -20,7 +20,7 @@ try {
 
     if ($userData === null) {
         setFlash('error', 'Le lien de verification est invalide ou a expire.');
-        redirect('/projetwebnova/View/auth.php');
+        redirect('/Green-Bite/View/auth.php');
     }
 
     // Create the user account
@@ -48,8 +48,8 @@ try {
 
     // Set flash message and redirect to login
     setFlash('success', 'Votre email a ete confirme avec succes! Vous pouvez maintenant vous connecter.');
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 } catch (Throwable $e) {
     setFlash('error', 'Erreur serveur: ' . $e->getMessage());
-    redirect('/projetwebnova/View/auth.php');
+    redirect('/Green-Bite/View/auth.php');
 }

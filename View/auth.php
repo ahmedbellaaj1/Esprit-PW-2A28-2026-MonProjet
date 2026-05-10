@@ -77,9 +77,9 @@ function generateCaptchaSVG(string $code): string
 
 if (isset($_SESSION['user'])) {
     if (($_SESSION['user']['role'] ?? '') === 'admin') {
-        redirect('/projetwebnova/View/back-office/users.php');
+        redirect('/Green-Bite/View/back-office/users.php');
     }
-    redirect('/projetwebnova/View/front-office/profile.php');
+    redirect('/Green-Bite/View/front-office/profile.php');
 }
 
 $flash = getFlash();
@@ -105,7 +105,7 @@ function field_error(array $errors, string $name): string
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Authentification - GreenBite</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="auth-style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background: #f1f5f9; }
@@ -113,7 +113,7 @@ function field_error(array $errors, string $name): string
 </head>
 <body>
     <main class="auth-page">
-        <section class="auth-card card" aria-label="Page de connexion et creation de compte">
+        <section class="auth-card" aria-label="Page de connexion et creation de compte">
             <aside class="auth-side">
                 <div>
                     <img src="../uploads/logo.png" alt="GreenBite Logo" class="auth-side-logo">
@@ -165,7 +165,7 @@ function field_error(array $errors, string $name): string
 
                         <?php
                             $baseUrl = getBaseUrl();
-                            $redirectUri = $baseUrl . '/projetwebnova/Controller/google-callback.php';
+                            $redirectUri = $baseUrl . '/Green-Bite/Controller/google-callback.php';
                             
                             error_log('[Google Auth] Base URL: ' . $baseUrl);
                             error_log('[Google Auth] Redirect URI: ' . $redirectUri);
