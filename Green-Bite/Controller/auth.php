@@ -180,7 +180,7 @@ try {
             redirect('/Green-Bite/View/back-office/users.php');
         }
 
-        redirect('/Green-Bite/View/front-office/index.php');
+        redirect('/Green-Bite/View/front-office/home.php');
     }
 
     if ($action === 'logout') {

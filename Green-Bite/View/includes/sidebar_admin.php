@@ -23,8 +23,11 @@ function sidebarLink(string $page, string $href, string $icon, string $label, st
         <?= sidebarLink('orders',     '/Green-Bite/View/back-office/orders.php',               '📦', 'Commandes',      $activePage) ?>
         <?= sidebarLink('reviews',    '/Green-Bite/View/back-office/reviews_moderation.php',   '⭐', 'Avis clients',   $activePage) ?>
         <?= sidebarLink('recettes',   '/Green-Bite/View/back-office/recettes.php',             '🍽️', 'Recettes',      $activePage) ?>
-        <?= sidebarLink('dons',       '/Green-Bite/View/back-office/dons.php',                 '🎁', 'Dons alimentaires', $activePage) ?>
-        <?= sidebarLink('users',      '/Green-Bite/View/back-office/users.php',                '👥', 'Utilisateurs',   $activePage) ?>
+        <?= sidebarLink('dons',           '/Green-Bite/View/back-office/dons.php',                 '🎁', 'Dons alimentaires', $activePage) ?>
+        <?= sidebarLink('evenements',     '/Green-Bite/View/back-office/evenements.php',            '📅', 'Événements',         $activePage) ?>
+        <?= sidebarLink('participants',   '/Green-Bite/View/back-office/participants.php',          '👥', 'Participants',        $activePage) ?>
+        <?= sidebarLink('organisateurs',  '/Green-Bite/View/back-office/organisateurs_ev.php',      '🏢', 'Organisateurs',       $activePage) ?>
+        <?= sidebarLink('users',          '/Green-Bite/View/back-office/users.php',                '👤', 'Utilisateurs',        $activePage) ?>
         <?= sidebarLink('front',      '/Green-Bite/View/front-office/index.php',               '🌐', 'Front Office',   $activePage) ?>
     </nav>
     <div class="sidebar-bottom">

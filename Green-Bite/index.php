@@ -8,9 +8,9 @@ if (isset($_SESSION['user'])) {
     if (($_SESSION['user']['role'] ?? '') === 'admin') {
         header('Location: /Green-Bite/View/back-office/dashboard.php');
     } else {
-        header('Location: /Green-Bite/View/front-office/index.php');
+        header('Location: /Green-Bite/View/front-office/home.php');
     }
 } else {
-    header('Location: /Green-Bite/View/auth.php');
+    header('Location: /Green-Bite/View/front-office/home.php');
 }
 exit;

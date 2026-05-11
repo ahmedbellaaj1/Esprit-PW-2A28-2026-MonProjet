@@ -8,21 +8,20 @@ require_once __DIR__ . '/../../Controller/UserRepository.php';
 requireAuth();
 
 $userRepository = new UserRepository();
-$currentUser = $userRepository->findById((int) $_SESSION['user']['id']);
+$profileUser = $userRepository->findById((int) $_SESSION['user']['id']);
 
-if ($currentUser === null) {
+if ($profileUser === null) {
     unset($_SESSION['user']);
     setFlash('error', 'Utilisateur introuvable.');
     redirect('/Green-Bite/View/auth.php');
 }
 
 $flash = getFlash();
-$initials = strtoupper(substr($currentUser->getPrenom(), 0, 1) . substr($currentUser->getNom(), 0, 1));
-$isAdmin = $currentUser->getRole() === 'admin';
+$isAdmin = $profileUser->getRole() === 'admin';
 $photoUrl = null;
 
-if (!empty($currentUser->getPhoto())) {
-    $photoFile = (string) $currentUser->getPhoto();
+if (!empty($profileUser->getPhoto())) {
+    $photoFile = (string) $profileUser->getPhoto();
     $photoPath = __DIR__ . '/../../uploads/users/' . $photoFile;
 
     if (is_file($photoPath)) {
@@ -39,27 +38,7 @@ if (!empty($currentUser->getPhoto())) {
     <link rel="stylesheet" href="../style.css">
 </head>
 <body>
-    <nav class="navbar">
-        <a class="navbar-logo" href="/Green-Bite/View/front-office/profile.php">
-            <img src="../../uploads/logo.png" alt="GreenBite Logo" class="navbar-logo-img">
-            <span class="navbar-logo-text">Green<span>Bite</span></span>
-        </a>
-        <ul class="navbar-links">
-            <li><a href="#">Accueil</a></li>
-            <li><a href="#">Recettes</a></li>
-            <li><a href="#">Produits</a></li>
-            <li><a href="#">Dons</a></li>
-            <li><a href="#" class="active">Mon profil</a></li>
-        </ul>
-        <div class="navbar-right">
-            <button class="primary-btn nav-quick-btn" type="button">Scanner un produit</button>
-            <div class="nav-avatar"><?= htmlspecialchars($initials !== '' ? $initials : 'GB') ?></div>
-            <form action="../../Controller/auth.php" method="post" class="navbar-logout-form">
-                <input type="hidden" name="action" value="logout">
-                <button type="submit" class="primary-btn nav-logout-btn">Deconnexion</button>
-            </form>
-        </div>
-    </nav>
+    <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
 
     <main class="profile-page">
         <section class="profile-card card" aria-label="Page profil utilisateur connecte">
@@ -68,7 +47,7 @@ if (!empty($currentUser->getPhoto())) {
                     <h1>Mon Profil</h1>
                     <p>Consultez et modifiez les informations de votre compte.</p>
                 </div>
-                <span class="profile-status">Compte <?= htmlspecialchars($currentUser->getStatut()) ?></span>
+                <span class="profile-status">Compte <?= htmlspecialchars($profileUser->getStatut()) ?></span>
             </header>
 
             <?php if ($flash): ?>
@@ -82,28 +61,28 @@ if (!empty($currentUser->getPhoto())) {
                     <?php if ($isAdmin): ?>
                         <div class="form-group">
                             <label for="profile-id">ID</label>
-                            <input id="profile-id" name="id" type="number" value="<?= (int) $currentUser->getId() ?>" readonly>
+                            <input id="profile-id" name="id" type="number" value="<?= (int) $profileUser->getId() ?>" readonly>
                         </div>
                     <?php endif; ?>
 
                     <div class="form-group">
                         <label for="profile-role">Role</label>
-                        <input id="profile-role" name="role" type="text" value="<?= htmlspecialchars($currentUser->getRole()) ?>" readonly>
+                        <input id="profile-role" name="role" type="text" value="<?= htmlspecialchars($profileUser->getRole()) ?>" readonly>
                     </div>
 
                     <div class="form-group">
                         <label for="profile-nom">Nom</label>
-                        <input id="profile-nom" name="nom" type="text" value="<?= htmlspecialchars($currentUser->getNom()) ?>" required>
+                        <input id="profile-nom" name="nom" type="text" value="<?= htmlspecialchars($profileUser->getNom()) ?>" required>
                     </div>
 
                     <div class="form-group">
                         <label for="profile-prenom">Prenom</label>
-                        <input id="profile-prenom" name="prenom" type="text" value="<?= htmlspecialchars($currentUser->getPrenom()) ?>" required>
+                        <input id="profile-prenom" name="prenom" type="text" value="<?= htmlspecialchars($profileUser->getPrenom()) ?>" required>
                     </div>
 
                     <div class="form-group full">
                         <label for="profile-email">Email</label>
-                        <input id="profile-email" name="email" type="email" value="<?= htmlspecialchars($currentUser->getEmail()) ?>" required>
+                        <input id="profile-email" name="email" type="email" value="<?= htmlspecialchars($profileUser->getEmail()) ?>" required>
                     </div>
 
                     <div class="form-group">
@@ -115,7 +94,7 @@ if (!empty($currentUser->getPhoto())) {
                             <button type="button" class="profile-photo-remove" id="removePhotoPreview" aria-label="Retirer la photo">x</button>
                             <img
                                 src="<?= htmlspecialchars($photoUrl ?? '') ?>"
-                                    alt="Photo de profil de <?= htmlspecialchars($currentUser->getPrenom() . ' ' . $currentUser->getNom()) ?>"
+                                    alt="Photo de profil de <?= htmlspecialchars($profileUser->getPrenom() . ' ' . $profileUser->getNom()) ?>"
                                 class="profile-photo-image"
                                 id="profilePhotoImage"
                             >

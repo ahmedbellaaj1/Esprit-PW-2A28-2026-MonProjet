@@ -121,7 +121,7 @@ try {
         redirect('/Green-Bite/View/back-office/users.php');
     }
     
-    redirect('/Green-Bite/View/front-office/profile.php');
+    redirect('/Green-Bite/View/front-office/home.php');
     
 } catch (Throwable $e) {
     setFlash('error', 'Erreur lors de la connexion: ' . $e->getMessage());
