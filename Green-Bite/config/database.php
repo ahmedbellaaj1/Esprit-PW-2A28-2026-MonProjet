@@ -12,11 +12,11 @@ const DB_ADMIN_PASSWORD_HASH = '$2y$10$NGWC2/odjiL57B4VKr0m8.EPJf6dL4vQj7OariCOv
 
 // Google OAuth Configuration (loaded from .env)
 function getGoogleClientId(): string {
-    return $_ENV['GOOGLE_CLIENT_ID'] ?? '';
+    return $_ENV['GOOGLE_CLIENT_ID'] ?? getenv('GOOGLE_CLIENT_ID') ?: '';
 }
 
 function getGoogleClientSecret(): string {
-    return $_ENV['GOOGLE_CLIENT_SECRET'] ?? '';
+    return $_ENV['GOOGLE_CLIENT_SECRET'] ?? getenv('GOOGLE_CLIENT_SECRET') ?: '';
 }
 
 function getServerPdo(): PDO

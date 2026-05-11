@@ -5,12 +5,24 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../../Controller/ProductController.php';
 require_once __DIR__ . '/../../Controller/OrderController.php';
+require_once __DIR__ . '/../../Controller/EvenementController.php';
+require_once __DIR__ . '/../../Controller/ParticipationController.php';
 
 $productController = new ProductController();
 $orderController = new OrderController();
+$eventController = new EvenementController();
+$participationController = new ParticipationController();
 
 $productMetrics = $productController->metrics();
 $orderMetrics = $orderController->metrics();
+
+// Statistiques événements
+$eventStats = $eventController->getStats();
+$totalEvents    = (int)($eventStats['total']       ?? 0);
+$upcomingEvents = (int)($eventStats['upcoming']    ?? 0);
+$totalParticipations = $participationController->getTotalParticipations();
+$totalOrganisateurs = (int)($eventStats['organisateurs'] ?? 0);
+$nextEvents = $eventController->getNextEvents(5);
 
 $totalProducts = $productMetrics['total'];
 $activeProducts = $productMetrics['active'];
@@ -45,7 +57,7 @@ $latestOrders = $orderController->latest(5);
         <div class="page-content">
             <div class="page-header">
                 <h1>Tableau de bord</h1>
-                <p>Suivi global des produits et des commandes.</p>
+                <p>Suivi global des produits, commandes et événements communautaires.</p>
             </div>
 
             <div class="metrics-grid">
@@ -72,6 +84,37 @@ $latestOrders = $orderController->latest(5);
                     <div class="metric-value"><?= count($latestProducts) ?></div>
                     <div class="metric-label">Nouveaux produits visibles</div>
                     <div class="metric-trend trend-up">Derniers ajouts</div>
+                </div>
+            </div>
+
+            <!-- ===== Section Événements ===== -->
+            <div class="page-header" style="margin-top:2rem;margin-bottom:1rem;">
+                <h2 style="font-size:1.4rem;font-weight:700;color:#0f172a;">📅 Événements Communautaires</h2>
+            </div>
+            <div class="metrics-grid" style="margin-bottom:1.5rem;">
+                <div class="metric-card">
+                    <div class="metric-icon icon-teal">📅</div>
+                    <div class="metric-value"><?= $totalEvents ?></div>
+                    <div class="metric-label">Total événements</div>
+                    <div class="metric-trend trend-up">↑ <?= $upcomingEvents ?> à venir</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon icon-blue">👥</div>
+                    <div class="metric-value"><?= $totalParticipations ?></div>
+                    <div class="metric-label">Participations</div>
+                    <div class="metric-trend trend-up">↑ Inscriptions actives</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon icon-amber">🏢</div>
+                    <div class="metric-value"><?= $totalOrganisateurs ?></div>
+                    <div class="metric-label">Organisateurs</div>
+                    <div class="metric-trend trend-up">↑ Partenaires actifs</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon icon-red">⏰</div>
+                    <div class="metric-value"><?= $upcomingEvents ?></div>
+                    <div class="metric-label">À venir</div>
+                    <div class="metric-trend trend-up">Prochainement</div>
                 </div>
             </div>
 
@@ -133,6 +176,36 @@ $latestOrders = $orderController->latest(5);
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel prochains événements -->
+            <div class="panels-row" style="margin-top:1.5rem;">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">⏰ Prochains Événements</div>
+                        <a class="panel-action" href="/Green-Bite/View/back-office/evenements.php">Gérer</a>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Titre</th><th>Date</th><th>Lieu</th><th>Type</th><th>Organisateur</th></tr></thead>
+                            <tbody>
+                            <?php if (empty($nextEvents)): ?>
+                                <tr><td colspan="5" style="text-align:center;padding:2rem;color:#64748b;">📭 Aucun événement à venir.<br><a href="/Green-Bite/View/back-office/evenements_add.php" style="color:#0f766e;">➕ Ajouter un événement</a></td></tr>
+                            <?php else: ?>
+                                <?php foreach ($nextEvents as $ev): ?>
+                                <tr>
+                                    <td><strong><?= h($ev['titre']) ?></strong></td>
+                                    <td><?= date('d/m/Y', strtotime($ev['date_event'])) ?></td>
+                                    <td><?= h($ev['lieu']) ?></td>
+                                    <td><span class="badge badge-green"><?= h($ev['type']) ?></span></td>
+                                    <td><?= h($ev['organisateur_nom'] ?? '-') ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                             </tbody>
                         </table>
                     </div>

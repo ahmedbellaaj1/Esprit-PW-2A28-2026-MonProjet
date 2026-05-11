@@ -23,14 +23,16 @@ if ($currentUser) {
         <span class="navbar-logo-text">Green<span>Bite</span></span>
     </a>
     <ul class="navbar-links">
-        <li><a href="/Green-Bite/View/front-office/index.php">Accueil</a></li>
-        <li><a href="/Green-Bite/View/front-office/index.php">Produits</a></li>
-        <li><a href="/Green-Bite/View/front-office/recettes.php">🍽️ Recettes</a></li>
-        <li><a href="/Green-Bite/View/front-office/dons.php">🎁 Dons</a></li>
-        <?php if (isLoggedIn()): ?>
-            <li><a href="/Green-Bite/View/front-office/cart.php">🛒 Panier</a></li>
-            <li><a href="/Green-Bite/View/front-office/order-history.php">📋 Historique</a></li>
-        <?php endif; ?>
+        <li><a href="/Green-Bite/View/front-office/home.php">🏠 Accueil</a></li>
+        <?php
+        $authUrl = '/Green-Bite/View/auth.php';
+        $loggedIn = isLoggedIn();
+        ?>
+        <li><a href="<?= $loggedIn ? '/Green-Bite/View/front-office/index.php' : $authUrl ?>">🛒 Produits</a></li>
+        <li><a href="<?= $loggedIn ? '/Green-Bite/View/front-office/recettes.php' : $authUrl ?>">🍽️ Recettes</a></li>
+        <li><a href="<?= $loggedIn ? '/Green-Bite/View/front-office/dons.php' : $authUrl ?>">🎁 Dons</a></li>
+        <li><a href="<?= $loggedIn ? '/Green-Bite/View/front-office/evenements/listEvenements.php' : $authUrl ?>">📅 Événements</a></li>
+        
     </ul>
     <div class="navbar-right">
         <?php if ($isAdmin): ?>
