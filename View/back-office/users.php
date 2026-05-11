@@ -23,30 +23,7 @@ $initials = strtoupper(substr((string) $sessionUser['prenom'], 0, 1) . substr((s
 </head>
 <body>
     <div class="dashboard-layout">
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <img src="../../uploads/logo.png" alt="GreenBite Logo" class="sidebar-logo-img">
-                <span class="sidebar-logo-text">Green<span>Bite</span></span>
-            </div>
-            <div class="sidebar-role">Administration</div>
-            <nav class="sidebar-nav">
-                <a class="sidebar-link" href="#"><span class="icon">📊</span> Vue d ensemble</a>
-                <a class="sidebar-link" href="#"><span class="icon">🛒</span> Produits</a>
-                <a class="sidebar-link" href="#"><span class="icon">⭐</span> Evaluations</a>
-                <a class="sidebar-link active" href="/Green-Bite/View/back-office/users.php"><span class="icon">👥</span> Utilisateurs</a>
-                <a class="sidebar-link" href="#"><span class="icon">🍽️</span> Recettes</a>
-                <a class="sidebar-link" href="#"><span class="icon">🎁</span> Dons</a>
-                <a class="sidebar-link" href="#"><span class="icon">📍</span> Magasins</a>
-                <a class="sidebar-link" href="#"><span class="icon">📈</span> Rapports</a>
-            </nav>
-            <div class="sidebar-bottom">
-                <a class="sidebar-link" href="#"><span class="icon">⚙️</span> Parametres</a>
-                <form action="../../Controller/auth.php" method="post" class="sidebar-link sidebar-logout-form">
-                    <input type="hidden" name="action" value="logout">
-                    <button type="submit" class="sidebar-link-btn"><span class="icon">🚪</span> Deconnexion</button>
-                </form>
-            </div>
-        </aside>
+<?php $activePage = 'users'; include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 
         <div class="dashboard-main">
             <header class="dashboard-header">

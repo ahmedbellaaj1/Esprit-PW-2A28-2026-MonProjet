@@ -25,6 +25,7 @@ if ($currentUser) {
     <ul class="navbar-links">
         <li><a href="/Green-Bite/View/front-office/index.php">Accueil</a></li>
         <li><a href="/Green-Bite/View/front-office/index.php">Produits</a></li>
+        <li><a href="/Green-Bite/View/front-office/recettes.php">🍽️ Recettes</a></li>
         <?php if (isLoggedIn()): ?>
             <li><a href="/Green-Bite/View/front-office/cart.php">🛒 Panier</a></li>
             <li><a href="/Green-Bite/View/front-office/order-history.php">📋 Historique</a></li>

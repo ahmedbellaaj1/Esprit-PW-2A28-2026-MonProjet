@@ -150,29 +150,7 @@ $totalAll       = count($allResult['avis']);
 </head>
 <body>
 <div class="dashboard-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <img src="../assets/659943731_2229435644263567_1175829106494475277_n.ico" alt="GreenBite Logo" class="sidebar-logo-img">
-            <span>Green<span>Bite</span></span>
-        </div>
-        <div class="sidebar-role">Administration</div>
-        <nav class="sidebar-nav">
-            <a class="sidebar-link" href="dashboard.php"><span class="icon">📊</span> Vue d'ensemble</a>
-            <a class="sidebar-link" href="products.php"><span class="icon">🛒</span> Produits</a>
-            <a class="sidebar-link" href="orders.php"><span class="icon">📦</span> Commandes</a>
-            <a class="sidebar-link active" href="reviews_moderation.php">
-                <span class="icon">⭐</span> Avis clients
-                <?php if ($pendingCount > 0): ?>
-                    <span style="margin-left:auto;background:#ef4444;color:white;font-size:.7rem;padding:.15rem .5rem;border-radius:999px;"><?= $pendingCount ?></span>
-                <?php endif; ?>
-            </a>
-            <a class="sidebar-link" href="../front-office/index.php"><span class="icon">🌐</span> Front Office</a>
-        </nav>
-        <div class="sidebar-bottom">
-            <a class="sidebar-link" href="#"><span class="icon">⚙️</span> Paramètres</a>
-        </div>
-    </aside>
+<?php $activePage = 'reviews'; include __DIR__ . '/../includes/sidebar_admin.php'; ?>
 
     <div class="dashboard-main">
         <header class="dashboard-header">
