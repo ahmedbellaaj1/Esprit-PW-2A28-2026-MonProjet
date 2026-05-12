@@ -9,7 +9,7 @@ La plateforme proposera également des recettes durables,évaluation nutritionne
 - Préférences alimentaires & gestion des allergies 
 - Recommendation intelligente des repas
 - Recommendation intelligente des produit
-- Géolocalisation & recherche (carte + liste, filtres par distance/catégorie)
+- systheme de connexion securisé
 
 ## Tech Stack
 ### Frontend
