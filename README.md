@@ -1,4 +1,4 @@
-# Nom du projet
+# GreenBite
 
 ## Overview
 Greenbite est un site web dédié à l’alimentation durable et à la nutrition intelligente. Il permettra aux utilisateurs de recevoir des recommandations de repas personnalisées selon leur profil, leurs préférences et leurs allergies.
@@ -24,7 +24,7 @@ La plateforme proposera également des recettes durables,évaluation nutritionne
 ## Contributors
 Ahmed Bellaaj
 Rayen Soula
-Iyed Dhrif
+Ahmed Iyed Dhrif
 Soheib Hemriti
 Mohammed Bedis Ammar
 Amen Allah Bani
