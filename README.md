@@ -6,8 +6,9 @@ La plateforme proposera également des recettes durables,évaluation nutritionne
 
 
 ## Features
-- Préférences alimentaires & gestion des allergies (filtrage intelligent)
+- Préférences alimentaires & gestion des allergies 
 - Recommendation intelligente des repas
+- Recommendation intelligente des produit
 - Géolocalisation & recherche (carte + liste, filtres par distance/catégorie)
 
 ## Tech Stack
